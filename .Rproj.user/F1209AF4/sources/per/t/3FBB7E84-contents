@@ -1,0 +1,66 @@
+library(tidyverse)
+library(janitor)
+
+wages <- read.table("wage.txt")
+wages <- row_to_names(wages, 1)
+wages[] <- lapply(wages, as.numeric)
+wages$occupation <- as.factor(wages$occupation)
+
+# Plotting WAGE versus EDUCATION to see if there's a linear relationship
+wages %>%
+  ggplot(mapping = aes(x = education, y = wage)) + 
+  geom_point()
+
+# Finding the correlation coefficient of the two variables
+# 0.3819221
+cor(wages$education, wages$wage)
+
+# Fitting a linear regression model
+model <- lm(wage ~ education, data = wages)
+summary(model)
+confint(model, level = 0.95)
+
+# Fitting a multiple linear regression model
+model_2 <- lm(wage ~ education + sex, data = wages)
+summary(model_2)
+confint(model_2, level = 0.95)
+
+# Fitting another model
+model_3 <- lm(wage ~ occupation, data = wages)
+summary(model_3)
+
+# Fitting another model
+model_4 <- lm(wage ~ education * sex, data = wages)
+summary(model_4)
+
+# Fitting another model
+model_5 <- lm(wage ~ education * occupation, data = wages)
+summary(model_5)
+
+# Fitting another model
+model_6 <- lm(wage ~ education + sex + occupation, data = wages)
+summary(model_6)
+
+# Plotting the residual plot
+plot(model_6, which = 1)
+
+# Plotting the Q-Q plot
+plot(model_6, which = 2)
+
+# Fitting another model
+model_7 <- lm(wage ~ ., data = wages)
+summary(model_7)
+
+# Checking for multicollinearity
+cor(select(wages, where(is.numeric)))
+
+# Fitting a logistic regression model
+wages <- wages %>%
+  mutate(wage_binary = as.numeric(wage > mean(wage)))
+model_8 <- glm(wage_binary ~ education, data = wages, family = "binomial")
+summary(model_8)
+
+
+
+
+

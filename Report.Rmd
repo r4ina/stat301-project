@@ -1,0 +1,57 @@
+---
+title: "Modeling Toronto Apartment Rental Prices"
+author: "Austin Hart, Olivia Jiang, Woobin Kim, Raina Tian"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This section should describe the background and objectives of the study.
+
+## Data Description
+
+This section should describe where the dataset comes from, the sample size, how the data were collected, etc.
+
+Our data was found on <https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>.
+
+## Exploratory Data Analysis (EDA)
+
+This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Loading packages
+library(tidyverse)
+
+# Reading in the data
+setwd("/Users/oliviajiang/Downloads/STAT 301/STAT 301 Project")
+data <- read_csv("Toronto_apartment_rentals_2018.csv")
+head(data)
+```
+
+## Models
+
+This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results.
+
+```{r, echo=FALSE}
+# Code will be here but hidden
+```
+
+## Conclusion
+
+This section should provide overall conclusions, any limitations in the datasets and analyses, and validity of the conclusions.
+
+## References
+
+Any references can go here.
+
+## Appendix
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
