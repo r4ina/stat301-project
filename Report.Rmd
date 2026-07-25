@@ -2,7 +2,9 @@
 title: "Modeling Toronto Apartment Rental Prices"
 author: "Austin Hart, Olivia Jiang, Woobin Kim, Raina Tian"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,22 +17,130 @@ This section should describe the background and objectives of the study.
 
 ## Data Description
 
-This section should describe where the dataset comes from, the sample size, how the data were collected, etc.
-
-Our data was found on <https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>.
+<!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
+We obtained the data from <https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>. The total number of rows in the original dataset before any data cleaning is 1,124. The data is made up of rental prices and contains data on apartment rental units in Toronto collected in 2018. It contains the apartment's geographic information (address, latitude, longitude), information on the rooms in each unit (the number of bedrooms, bathrooms, and dens), and the unit's monthly rental cost in CAD.
 
 ## Exploratory Data Analysis (EDA)
 
-This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section.
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 # Loading packages
 library(tidyverse)
 
-# Reading in the data
-setwd("/Users/oliviajiang/Downloads/STAT 301/STAT 301 Project")
+# Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
-head(data)
+
+# Seeing how many duplicate rows there are
+sum(duplicated(data)) # 308
+
+# Viewing duplicate rows
+data[duplicated(data) | duplicated(data, fromLast = TRUE), ]
+
+# Cleaning the data
+data <- data %>%
+  # Removing unnecessary columns
+  select(-c(Address, Lat, Long)) %>%
+  # Making the column names lowercase
+  rename_with(tolower) %>%
+  # Converting price to a number
+  mutate(price = parse_number(price)) %>%
+  # Removing outliers
+  # NOTE: there's also two 99s I don't know if we should keep
+  filter(!price %in% c(65, 99, 99, 36900, 535000)) %>%
+  # Removing duplicate rows
+  distinct()
+
+# Seeing if there are any NAs
+colSums(is.na(data)) # 0
+```
+
+<!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
+
+The total number of rows in the original dataset is 1,124. During data cleaning, we removed 308 duplicates. We also removed 5 rows with unusual values for `price` (\$65, \$99, \$99, \$36,900, \$535,000). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`. There are no missing values in any columns.
+
+Before modeling, we want to find out more about the data. The variables we're most interested in are `price`, `bedroom`, `bathroom`, and `den`.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+# Viewing summary stats of price
+mean(data$price) # 2254.844
+sd(data$price) # 1020.881
+min(data$price) # 150
+max(data$price) # 9750
+```
+
+This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2255. As well, its standard deviation is \$1021, the minimum is \$150, and the maximum is \$9750.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Viewing a histogram of price
+data %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(fill = "skyblue", bins = 20) +
+  labs(x = "Monthly Rental Cost (2018)", y = "Frequency") +
+  geom_vline(aes(xintercept = mean(price)), 
+             color = "black", linetype = "dashed", linewidth = 1) +
+  annotate("text", 
+           x = 2255 + 200,
+           y = 80,
+           label = "Mean Monthly Rent: $2255", 
+           color = "black", 
+           hjust = 0) +
+  theme_minimal()
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Viewing frequencies of bed/bath/den
+# TODO: put these in proper tables
+table(data$bedroom) # 3 levels
+table(data$bathroom) # 5 levels
+table(data$den) # 2 levels
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Making boxplots of price by bed/bath/den count
+# TODO: label axes, put title, make pretty
+
+data %>%
+  mutate(bedroom = as.factor(bedroom)) %>%
+  ggplot(aes(x = bedroom, y = price)) +
+  geom_boxplot()
+
+data %>%
+  mutate(bathroom = as.factor(bathroom)) %>%
+  ggplot(aes(x = bathroom, y = price)) +
+  geom_boxplot()
+
+data %>%
+  mutate(den = as.factor(den)) %>%
+  ggplot(aes(x = den, y = price)) +
+  geom_boxplot()
+```
+
+```{r, echo=FALSE}
+# Making scatterplots of price against bedroom and bathroom 
+# NOTE: these relationships don't seem very linear
+
+data %>%
+  ggplot(aes(x = bedroom, y = price)) +
+  geom_point()
+
+data %>%
+  ggplot(aes(x = bedroom, y = price)) +
+  geom_point()
+```
+
+```{r, echo=FALSE}
+# Making a correlation matrix
+# NOTE: bed and bath are moderately correlated at r = 0.6365081
+# NOTE: price and den aren't really correlated at r = 0.03690185
+# TODO: make pretty by making it into a proper figure
+cor(data)
+```
+
+```{r, echo=FALSE}
+# Making histograms
+# hist(data$Bedroom) # TODO - only integers on x-axis
+# hist(data$Bathroom)
+# hist(data$Den)
+# hist(data$Price)
+# data[order(data$Price, decreasing = FALSE),]
 ```
 
 ## Models
@@ -38,7 +148,8 @@ head(data)
 This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results.
 
 ```{r, echo=FALSE}
-# Code will be here but hidden
+model_1 <- lm(price ~ ., data)
+summary(model_1)
 ```
 
 ## Conclusion
