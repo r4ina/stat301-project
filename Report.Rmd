@@ -30,6 +30,7 @@ library(tidyverse)
 library(knitr)
 library(scales)
 library(patchwork)
+library(corrplot)
 
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
@@ -71,7 +72,7 @@ min(data$price) # 150
 max(data$price) # 9750
 ```
 
-This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2255. As well, its standard deviation is \$1021, the minimum is \$150, and the maximum is \$9750.
+This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2255. As well, its standard deviation is \$1021, the minimum is \$150, and the maximum is \$9750. TODO: commentary
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Viewing a histogram of price
@@ -93,9 +94,13 @@ data %>%
   theme_classic()
 ```
 
-Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`. TODO: comment on them!
+\newpage
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
+
+TODO: comment on them!
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=2}
 # Making bar plots of bedroom/bathroom/den counts
 
 bar_1 <- data %>%
@@ -129,7 +134,6 @@ TODO: comment on them (such as the unbalanced groups)!
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
-# TODO: label axes, add title, make pretty
 
 boxplot_1 <- data %>%
   mutate(bedroom = as.factor(bedroom)) %>%
@@ -158,16 +162,28 @@ boxplot_3 <- data %>%
 boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Rent Prices by Room Counts")
 ```
 
-We're also curious about the correlations between the variables so we plot a correlation matrix. TODO: comment on this!
+\newpage
 
-```{r, echo=FALSE}
+We're also curious about the correlations between the variables so we plot (the upper triangle of) a correlation matrix.
+
+```{r, echo=FALSE, warnings=FALSE, fig.height=3, fig.width=5, fig.align='center'}
 # Making a correlation matrix
-# NOTE: bed and bath are moderately correlated at r = 0.640
-# NOTE: price and den aren't really correlated at r = 0.037
-# TODO: round to 2 decimal places
-# TODO: make pretty by making it into a proper figure
-round(cor(data), 2)
+corrplot(round(cor(data), 2),
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         tl.col = "black",
+         tl.srt = 30,
+         tl.cex = 0.8,
+         cl.ratio = 0.35,
+         cl.length = 5,
+         cl.cex = 0.9,
+         number.cex = 0.8,
+         col = colorRampPalette(c("#4477AA", "#77AADD", "#FFFFFF", "#EE9988", "#BB4444"))(200),
+         mar = c(2,2,2,2),
+         diag = TRUE)
 ```
+The variables with the strongest correlation with `price` are `bathroom` (r = 0.47) and `bathroom` (r = 0.38), though these are only moderately strong linear correlations. `den` is weakly negatively correlated with `price` at r = -0.01. Moreoever, `bedroom` and `bathroom` are moderately correlated at r = 0.50, which may indicate that they're collinear, which may affect our modeling decisions later on.
 
 TODO: key take-aways of EDA
 
