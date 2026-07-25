@@ -20,9 +20,9 @@ This section should describe the background and objectives of the study.
 ## Data Description
 
 <!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
-We obtained the data from [\underline{this}](<https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>) Kaggle dataset. The amount of rows in the original dataset before any data cleaning is 1,124. The data is made up of rental prices and contains data on apartment rental units in Toronto collected in 2018. It contains the apartment's geographic information (address, latitude, longitude), information on the rooms in each unit (the number of bedrooms, bathrooms, and dens), and the unit's monthly rental cost in CAD.
+We obtained the data from [\underline{this}](<https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>) Kaggle dataset. The amount of rows in the original dataset before any data cleaning is 1,124. The data is made up of rental prices and contains data on apartment rental units in Toronto collected in 2018. It contains the apartment's geographic information (address, latitude, longitude), information on the rooms in each unit (the number of bedrooms, bathrooms, and dens), and the unit's monthly rental cost.
 
-## Exploratory Data Analysis (EDA)
+## Exploratory Data Analysis
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 # Loading packages
@@ -59,7 +59,7 @@ colSums(is.na(data)) # 0
 
 <!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
 
-The total number of rows in the original dataset is 1,124. During data cleaning, we removed 308 duplicates. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`. There are no missing values in any columns.
+The total number of rows in the original dataset is 1,124. During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`. There are no missing values in any columns.
 
 Before modeling, we want to find out more about the data. The variables we're most interested in are `price`, `bedroom`, `bathroom`, and `den`.
 
@@ -86,7 +86,7 @@ data %>%
   annotate("text", 
            x = 2255 + 200,
            y = 80,
-           label = "Mean Rent: $2255", 
+           label = "Mean Rent: $2,255", 
            color = "black", 
            hjust = 0) +
   scale_x_continuous(labels = label_dollar()) +
@@ -123,7 +123,7 @@ bar_3 <- data %>%
 bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by Room Type")
 ```
 
-Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics. TODO: comment on them!
+Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics. TODO: comment on them (such as the unbalanced groups)!
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
@@ -132,22 +132,28 @@ Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts i
 boxplot_1 <- data %>%
   mutate(bedroom = as.factor(bedroom)) %>%
   ggplot(aes(x = bedroom, y = price)) +
-  geom_boxplot() +
+  geom_boxplot(fill = "lightgrey") +
+  labs(y = "Monthly Rent", x = "# of Bedrooms") +
+  scale_y_continuous(labels = label_dollar()) +
   theme_classic()
 
 boxplot_2 <- data %>%
   mutate(bathroom = as.factor(bathroom)) %>%
   ggplot(aes(x = bathroom, y = price)) +
-  geom_boxplot() +
+  geom_boxplot(fill = "lightgrey") +
+  labs(y = "Monthly Rent", x = "# of Bathrooms") +
+  scale_y_continuous(labels = label_dollar()) +
   theme_classic()
 
 boxplot_3 <- data %>%
   mutate(den = as.factor(den)) %>%
   ggplot(aes(x = den, y = price)) +
-  geom_boxplot() +
+  geom_boxplot(fill = "lightgrey") +
+  labs(y = "Monthly Rent", x = "# of Dens") +
+  scale_y_continuous(labels = label_dollar()) +
   theme_classic()
 
-boxplot_1 + boxplot_2 + boxplot_3 # + plot_annotation(title = "Frequencies of Room Counts by Room Type")
+boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Rent Prices by Room Counts")
 ```
 
 We're also about the correlations between the variables so we plot a correlation matrix. TODO: comment on this!
@@ -158,34 +164,10 @@ We're also about the correlations between the variables so we plot a correlation
 # NOTE: price and den aren't really correlated at r = 0.037
 # TODO: round to 2 decimal places
 # TODO: make pretty by making it into a proper figure
-cor(data)
+round(cor(data), 2)
 ```
 
-```{r, echo=FALSE, include=FALSE}
-# Making histograms
-# hist(data$Bedroom) # TODO - only integers on x-axis
-# hist(data$Bathroom)
-# hist(data$Den)
-# hist(data$Price)
-# data[order(data$Price, decreasing = FALSE),]
-
-# Viewing frequencies of bed/bath/den
-table_1 <- table(data$bedroom) # 3 levels
-table_2 <- table(data$bathroom) # 5 levels
-table_3 <- table(data$den) # 2 levels
-
-kable(as.data.frame(table_1),
-      col.names = c("Number of Bedrooms", "Frequency"), 
-      align = "cc")
-
-kable(as.data.frame(table_2), 
-      col.names = c("Number of Bathrooms", "Frequency"), 
-      align = "cc")
-
-kable(as.data.frame(table_3), 
-      col.names = c("Number of Dens", "Frequency"), 
-      align = "cc")
-```
+TODO: key take-aways of EDA
 
 \newpage
 
@@ -198,13 +180,16 @@ model_1 <- lm(price ~ ., data)
 summary(model_1)
 ```
 
+```{r, echo=FALSE}
+model_2 <- lm(price ~ bedroom + bathroom, data)
+summary(model_2)
+# TODO: model justifications
+# TODO: residual plots, Q-Q plots, comments on p-values/significance, interpretations of coefficients in the context of our data
+```
+
 ## Conclusion
 
 This section should provide overall conclusions, any limitations in the datasets and analyses, and validity of the conclusions.
-
-## References
-
-Any references can go here.
 
 ## Appendix
 
