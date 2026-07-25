@@ -56,6 +56,10 @@ data <- data %>%
 
 # Seeing if there are any NAs
 colSums(is.na(data)) # 0
+
+# Adding a binary response variable (whether price is more than its mean)
+data <- data %>%
+  mutate(high_price = if_else(price > mean(price), 1, 0))
 ```
 
 <!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
@@ -72,7 +76,7 @@ min(data$price) # 150
 max(data$price) # 9750
 ```
 
-This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2255. As well, its standard deviation is \$1021, the minimum is \$150, and the maximum is \$9750. TODO: commentary
+This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2,255. As well, its standard deviation is \$1,021, the minimum is \$150, and the maximum is \$9,750. TODO: more commentary
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Viewing a histogram of price
@@ -98,7 +102,7 @@ data %>%
 
 Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
 
-TODO: comment on them!
+TODO: comment on them (such as the unbalanced groups)
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=2}
 # Making bar plots of bedroom/bathroom/den counts
@@ -130,7 +134,7 @@ bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by R
 
 Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
 
-TODO: comment on them (such as the unbalanced groups)!
+TODO: comment on them
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
