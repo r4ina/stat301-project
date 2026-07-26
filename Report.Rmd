@@ -35,6 +35,8 @@ library(corrplot)
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
 
+nrow(data)
+
 # Seeing how many duplicate rows there are
 sum(duplicated(data)) # 308
 
@@ -43,6 +45,8 @@ data[duplicated(data) | duplicated(data, fromLast = TRUE), ]
 
 # Cleaning the data
 data <- data %>%
+  # Removing duplicate rows
+  distinct() %>%
   # Removing unnecessary columns
   select(-c(Address, Lat, Long)) %>%
   # Making the column names lowercase
@@ -50,9 +54,7 @@ data <- data %>%
   # Converting price to a number
   mutate(price = parse_number(price)) %>%
   # Removing outliers
-  filter(!price %in% c(65, 99, 99, 36900, 535000)) %>%
-  # Removing duplicate rows
-  distinct()
+  filter(!price %in% c(65, 99, 99, 36900, 535000))
 
 # Seeing if there are any NAs
 colSums(is.na(data)) # 0
