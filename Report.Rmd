@@ -31,6 +31,7 @@ library(knitr)
 library(scales)
 library(patchwork)
 library(corrplot)
+library(broom)
 
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
@@ -199,21 +200,60 @@ TODO: key take-aways of EDA
 
 This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results.
 
-```{r, echo=FALSE}
-model_1 <- lm(price ~ ., data)
-summary(model_1)
+### Additive Linear Regression
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Linear additive model
+
+linear_add <- lm(price ~ bedroom + bathroom, data = data)
+
+# summary(linear_add)
+
+# Coefficients & p-values
+# TODO: comments on p-values/significance, interpretations of coefficients in the context of our data
+tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
 ```
 
-```{r, echo=FALSE}
-model_2 <- lm(price ~ bedroom + bathroom, data)
-summary(model_2)
-# TODO: model justifications
-# TODO: residual plots, Q-Q plots, comments on p-values/significance, interpretations of coefficients in the context of our data
+TODO: commentary
+
+```{r, echo=FALSE, fig.height=6}
+# Residual plot
+plot(linear_add, which = 1)
 ```
+
+TODO: commentary
+
+```{r, echo=FALSE, fig.height=6}
+# Q-Q plot
+plot(linear_add, which = 2)
+```
+
+### Additive Logistic Regression
+
+```{r, echo=FALSE}
+# Additive logistic model
+
+logistic_add <- glm(high_price ~ bedroom + bathroom, data = data)
+
+# summary(logistic_add)
+
+# Coefficients & p-values
+tidy(logistic_add, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+```
+
+TODO: commentary
+
+TODO: maybe precision, accuracy, etc. as diagnostics
 
 ## Conclusion
 
 This section should provide overall conclusions, any limitations in the datasets and analyses, and validity of the conclusions.
+
+\newpage
 
 ## Appendix
 
