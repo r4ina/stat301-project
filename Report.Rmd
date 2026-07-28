@@ -1,4 +1,4 @@
-$---
+---
 title: "Analyzing Toronto Apartment Rental Prices"
 author:
 - "Austin Hart (45726379)"
