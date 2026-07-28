@@ -1,15 +1,25 @@
 ---
-title: "Modeling Toronto Apartment Rental Prices"
-author: "Austin Hart, Olivia Jiang, Woobin Kim, Raina Tian"
+title: "Analyzing Toronto Apartment Rental Prices"
+author:
+- "Austin Hart (45726379)"
+- "Olivia Jiang (82785783)"
+- "Woobin Kim (39017496)"
+- "Raina Tian (11946720)"
 date: "`r Sys.Date()`"
 output:
   pdf_document: default
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 7)
 ```
+
+Project Task Assignments:
+
+- Austin did...
+- Olivia did...
+- Raina did...
+- Woobin did...
 
 \newpage
 
@@ -20,7 +30,11 @@ This section should describe the background and objectives of the study.
 ## Data Description
 
 <!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
-We obtained the data from [\underline{this}](<https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>) Kaggle dataset. The amount of rows in the original dataset before any data cleaning is 1,124. The data is made up of rental prices and contains data on apartment rental units in Toronto collected in 2018. It contains the apartment's geographic information (address, latitude, longitude), information on the rooms in each unit (the number of bedrooms, bathrooms, and dens), and the unit's monthly rental cost.
+We obtained the data from [\underline{this}](<https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>) Kaggle dataset. The amount of rows in the original dataset before any data cleaning is 1,124. The data contains information on apartment rental units in Toronto collected in 2018, including the apartment's geographic information (`address`, `latitude`, and `longitude`), information on its rooms (the number of `bedroom`s, `bathroom`s, and `den`s), and the unit's monthly rental `price`.
+
+The total number of rows in the original dataset is 1,124. There are no missing values in any columns.
+
+During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`.
 
 ## Exploratory Data Analysis
 
@@ -49,7 +63,7 @@ data <- data %>%
   # Removing duplicate rows
   distinct() %>%
   # Removing unnecessary columns
-  select(-c(Address, Lat, Long)) %>%
+  select(-c(Address)) %>%
   # Making the column names lowercase
   rename_with(tolower) %>%
   # Converting price to a number
@@ -67,19 +81,18 @@ data <- data %>%
 
 <!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
 
-The total number of rows in the original dataset is 1,124. During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`. There are no missing values in any columns.
+Before modeling, we want to find out more about the data. The variables we're most interested in are `price`, `bedroom`, `bathroom`, and `den`; however, we first view the sample's summary statistics of each column.
 
-Before modeling, we want to find out more about the data. The variables we're most interested in are `price`, `bedroom`, `bathroom`, and `den`.
-
-```{r echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-# Viewing summary stats of price
-mean(data$price) # 2254.844
-sd(data$price) # 1020.881
-min(data$price) # 150
-max(data$price) # 9750
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Viewing summary stats
+data %>%
+  summarise(across(where(is.numeric), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE)))) %>%
+  tidy()
 ```
 
-This histogram of `price` shows that the distribution is slightly right-skewed and unimodal around the mean of \$2,255. As well, its standard deviation is \$1,021, the minimum is \$150, and the maximum is \$9,750. TODO: more commentary
+TODO: a table of summary stats of everything except address
+
+To visualize the distribution of `price`, we plot a histogram.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Viewing a histogram of price
@@ -93,35 +106,37 @@ data %>%
              color = "black", linetype = "dashed", linewidth = 0.5) +
   annotate("text", 
            x = 2255 + 200,
-           y = 80,
-           label = "Mean Rent: $2,255", 
+           y = 200,
+           label = "Mean Rent: $2,186", 
            color = "black", 
            hjust = 0) +
   scale_x_continuous(labels = label_dollar()) +
   theme_classic()
 ```
 
+The distribution is slightly right-skewed and unimodal around the mean of `mean`. As well, its standard deviation is \$1,021/month, the minimum is \$150/month, and the maximum is \$9,750/month.
+ 
+TODO: more commentary
+ 
 \newpage
 
 Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
 
-TODO: comment on them (such as the unbalanced groups)
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=2}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making bar plots of bedroom/bathroom/den counts
 
 bar_1 <- data %>%
   ggplot(aes(x = bedroom)) +
   geom_bar(fill = "darkolivegreen3") +
   labs(x = "# of Bedrooms", y = "Count") +
-  coord_cartesian(ylim = c(0, 300)) +
+  coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
 bar_2 <- data %>%
   ggplot(aes(x = bathroom)) +
   geom_bar(fill = "darkolivegreen3") +
   labs(x = "# of Bathrooms", y = "Count") +
-  coord_cartesian(ylim = c(0, 300)) +
+  coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
 bar_3 <- data %>%
@@ -129,15 +144,15 @@ bar_3 <- data %>%
   ggplot(aes(x = den)) +
   geom_bar(fill = "darkolivegreen3") +
   labs(x = "# of Dens", y = "Count") +
-  coord_cartesian(ylim = c(0, 300)) +
+  coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
 bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by Room Type")
 ```
 
-Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
+TODO: comment on them (such as the unbalanced groups)
 
-TODO: comment on them
+Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
@@ -169,13 +184,17 @@ boxplot_3 <- data %>%
 boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Rent Prices by Room Counts")
 ```
 
+TODO: comment on them
+
+TODO: number of observations of each 0/1 column
+
 \newpage
 
 We're also curious about the correlations between the variables so we plot (the upper triangle of) a correlation matrix.
 
 ```{r, echo=FALSE, warnings=FALSE, fig.height=3, fig.width=5, fig.align='center'}
 # Making a correlation matrix
-corrplot(round(cor(data), 2),
+corrplot(round(cor(select(data, -high_price)), 2),
          method = "color",
          type = "upper",
          addCoef.col = "black",
@@ -198,7 +217,7 @@ TODO: key take-aways of EDA
 
 ## Models
 
-This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results.
+<!-- This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
 ### Additive Linear Regression
 
@@ -258,6 +277,12 @@ This section should provide overall conclusions, any limitations in the datasets
 ## Appendix
 
 ```{r, warning=FALSE, message=FALSE}
+# Loading packages
 library(tidyverse)
+library(knitr)
+library(scales)
+library(patchwork)
+library(corrplot)
+library(broom)
 ```
 
