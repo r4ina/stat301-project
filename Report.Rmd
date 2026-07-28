@@ -81,16 +81,31 @@ data <- data %>%
 
 <!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
 
-Before modeling, we want to find out more about the data. The variables we're most interested in are `price`, `bedroom`, `bathroom`, and `den`; however, we first view the sample's summary statistics of each column.
+Before modeling, we want to find out more about the data.
+
+We first examine each variable individually. Below are the sample's summary statistics of each variable.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Viewing summary stats
 data %>%
-  summarise(across(where(is.numeric), list(mean = ~mean(.x, na.rm = TRUE), sd = ~sd(.x, na.rm = TRUE)))) %>%
-  tidy()
+  select(-high_price) %>%
+  # Reshaping data into a long format
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
+  # Grouping by the variable
+  group_by(Variable) %>%
+  # Calculating the stats
+  summarise(Mean = round(mean(Value, na.rm = TRUE), 2),
+            SD = round(sd(Value, na.rm = TRUE), 2),
+            Min = round(min(Value, na.rm = TRUE), 2),
+            Max = round(max(Value, na.rm = TRUE), 2)) %>%
+  kable()
 ```
 
-TODO: a table of summary stats of everything except address
+TODO: commentary on meaningfulness... There's nothing unusual... As well, `price`'s standard deviation is \$1,021/month, its minimum is \$150/month, and its maximum is \$9,750/month. We decided that...
+
+\newpage
+
+We also visualize the distribution of each variable individually.
 
 To visualize the distribution of `price`, we plot a histogram.
 
@@ -117,8 +132,6 @@ data %>%
 The distribution is slightly right-skewed and unimodal around the mean of `mean`. As well, its standard deviation is \$1,021/month, the minimum is \$150/month, and the maximum is \$9,750/month.
  
 TODO: more commentary
- 
-\newpage
 
 Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
 
@@ -152,7 +165,9 @@ bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by R
 
 TODO: comment on them (such as the unbalanced groups)
 
-Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
+\newpage
+
+Next, we examine possible relationships between variables. Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
@@ -186,9 +201,7 @@ boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Re
 
 TODO: comment on them
 
-TODO: number of observations of each 0/1 column
-
-\newpage
+TODO: number of observations of each 0/1 in high_price
 
 We're also curious about the correlations between the variables so we plot (the upper triangle of) a correlation matrix.
 
@@ -219,7 +232,27 @@ TODO: key take-aways of EDA
 
 <!-- This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
-### Additive Linear Regression
+Now that we have processed our data, we can consider models that can predict rental price based on our other variables. In the previous section, we narrowed down the variables we can use as predictors to number of bedrooms and number of bathrooms. To make use of these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
+
+### Multiple Linear Regression
+
+A multiple linear regression model model generates predictions as a straight line with a slope and intercept.
+
+When making a multiple linear regression model, one of the first things to consider is whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will be different depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing, something which can be checked by creating a model with interaction in R and checking the model's statistics.
+
+Results with interaction:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Linear additive model
+
+linear_mult <- lm(price ~ bedroom * bathroom, data = data)
+
+tidy(linear_mult, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+```
+
+Results without interaction:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Linear additive model
@@ -235,25 +268,49 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-TODO: commentary
+As shown in the tables above, the table produced by the model with interaction is reporting p-values in excess of our predecided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently identify any interaction between the predictors and must proceed with the model without interaction.
+
+The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a $206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant.
+
+To ensure that our linear model is appropriate for the data, we need to run some model diagnostics in the form of a residual and Q-Q plot.
 
 ```{r, echo=FALSE, fig.height=6}
 # Residual plot
 plot(linear_add, which = 1)
 ```
 
-TODO: commentary
+For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are categorical, the data points are not continuously distributed, making the plot somewhat messy to look at. It shows that while the error approximately follows a normal distribution distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
 
 ```{r, echo=FALSE, fig.height=6}
 # Q-Q plot
 plot(linear_add, which = 2)
 ```
 
-### Additive Logistic Regression
+Another way of checking the distributon of the error is a Q-Q plot. If the error is normally distributed with equal variance, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein X = Y. The Q-Q plot of our linear model shows the data following this line for the most part, but diverging at the beginning and the end, implying that our model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the model, such as log transformation and predicting the square root of the response variable, were unsuccesful in creating a more favourable distribution.
+
+While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model is still useful for making predictions.
+
+### Multiple Logistic Regression
+
+A multiple logistic regression model is used to make predictions for a categorical response variable. To make use of such a model, we converted our response variable (price) into a categorical one by splitting it into two categories for rent above and below the mean value. Thus, our model will be predicting whether a property has above or below average rent, rather than a specific value.
+
+Once again, we need to begin by checking for interaction between predictors.
+
+Results with interaction:
+
+```{r, echo=FALSE}
+# Multiplicative logistic model
+logistic_mult <- glm(high_price ~ bedroom * bathroom, data = data)
+
+tidy(logistic_mult, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+```
+
+Results without interaction:
 
 ```{r, echo=FALSE}
 # Additive logistic model
-
 logistic_add <- glm(high_price ~ bedroom + bathroom, data = data)
 
 # summary(logistic_add)
@@ -264,9 +321,15 @@ tidy(logistic_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-TODO: commentary
+The tables above show that neither model passes the hypothesis tests necessary to prove statistical significance. Of the two models, the results with interaction come much closer. To proceed with our analysis, our only option is to lower our stated level of significance to 89% and continue with the model with interaction. So, keep in mind that any further observations on our logistic regression model will be made with this altered level of significance.
 
-TODO: maybe precision, accuracy, etc. as diagnostics
+The table of our model with interaction shows that an additional bedroom increases the log odds of a property having high rent by 0.19, an additional bathroom increases the log odds of a property having high rent by 0.57, and .
+
+Again we must run some model diagnostics to ensure our model is appropriate for the data. This time we will use a binned residuals plot.
+
+(insert binned residuals plot here).
+
+In a binned residuals plot, the majority of data points (approximately 95%) must fall within the generated error bounds (Ludecke et al., n.d.). As you can see, our model easily meets this criteria as all of the data points fall within these bounds.
 
 ## Conclusion
 
