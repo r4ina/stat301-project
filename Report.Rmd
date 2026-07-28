@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 7)
 
 ## Introduction
 
-This section should describe the background and objectives of the study.
+In high-density metropolitan areas like Toronto, assessing how specific layout configurations influence rental pricing provides valuable insight into market structure and housing affordability. This study examines the relationship between apartment layout features and rental pricing in Toronto. Specifically, we evaluate how the number of bedrooms and bathrooms along with their potential interaction effects predict continuous monthly rent (price) using multiple linear regression. Additionally, we use binary logistic regression to assess whether these same features can reliably predict if a listing qualifies as a high-value property (high_price). By comparing the main effects and interaction models across both linear and logistic frameworks, we evaluate the predictive validity and explanatory power of these structural characteristics. 
 
 ## Data Description
 
