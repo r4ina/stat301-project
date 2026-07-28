@@ -1,4 +1,4 @@
----
+$---
 title: "Analyzing Toronto Apartment Rental Prices"
 author:
 - "Austin Hart (45726379)"
@@ -30,7 +30,11 @@ In high-density metropolitan areas like Toronto, assessing how specific layout c
 ## Data Description
 
 <!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
-We obtained the data from [\underline{this}](<https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price>) Kaggle dataset. The amount of rows in the original dataset before any data cleaning is 1,124. The data contains information on apartment rental units in Toronto collected in 2018, including the apartment's geographic information (`address`, `latitude`, and `longitude`), information on its rooms (the number of `bedroom`s, `bathroom`s, and `den`s), and the unit's monthly rental `price`.
+### Source and Collection
+The dataset for this study was retrieved from a public Kaggle repository titled [Toronto Apartment Rental Price](https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price/data), compiled by independent creator Raja CSP. According to the dataset documentation, the listings were aggregated and scraped from local rental websites active across Toronto in 2018.
+
+### Structure and Format
+The study utilizes Version 3 of the dataset, stored as a single comma-separated values file (`Toronto_apartment_rentals_2018.csv`) with a total file size of 94.97 KB. The raw file contains $N = 1,124$ observational rows across 7 attribute columns, where each row corresponds to a unique apartment listing. There are no missing values in any columns in the raw data.
 
 The total number of rows in the original dataset is 1,124. There are no missing values in any columns.
 
