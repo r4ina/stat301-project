@@ -29,7 +29,6 @@ In high-density metropolitan areas like Toronto, assessing how specific layout c
 
 ## Data Description
 
-<!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
 The dataset for this study was retrieved from a public Kaggle repository titled [Toronto Apartment Rental Price](https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price/data), compiled by independent creator Raja CSP. According to the dataset documentation, the listings were aggregated and scraped from local rental websites active across Toronto in 2018.
 
 The study utilizes Version 3 of the dataset, stored as a single comma-separated values file with a file size of 94.97 KB. The raw file contains `n = 1,124` observational rows across 7 attribute columns, where each row corresponds to a unique apartment listing. There are no missing values in any columns in the raw data.
@@ -44,6 +43,7 @@ library(scales)
 library(patchwork)
 library(corrplot)
 library(broom)
+library(janitor)
 
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
@@ -76,8 +76,6 @@ colSums(is.na(data)) # 0
 data <- data %>%
   mutate(high_price = if_else(price > mean(price), 1, 0))
 ```
-
-<!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
 
 During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 9 rows where `price` was either below \$100/month or above \$6,000/month (namely, \$65, \$99, \$99, \$6,000, \$6,500, \$8,000, \$9,750, \$36,900, and $535,000) because these outliers may skew our results. The sample size is now `n = 807`.
 
@@ -115,15 +113,14 @@ We now plot a histogram to visualize the distribution of `price` and a bar chart
 hist_1 <- data %>%
   ggplot(aes(x = price)) +
   geom_histogram(fill = "burlywood2", color = "burlywood2", bins = 20) +
-  labs(# title = "Distribution of Toronto Monthly Apartment Rents (2018)",
-       x = "Monthly Rent", # TODO: smaller title
+  labs(x = "Monthly Rent",
        y = "Frequency") +
-  geom_vline(aes(xintercept = mean(price)), 
+  geom_vline(aes(xintercept = mean(price)),
              color = "black", linewidth = 0.5) +
   annotate("text",
            x = 2159 + 200,
            y = 200,
-           label = "Mean Rent: $2,159",
+           label = "Mean: $2,159",
            color = "black",
            hjust = 0) +
   scale_x_continuous(labels = label_dollar()) +
@@ -141,9 +138,9 @@ hist_2 <- data %>%
 hist_1 + hist_2 + plot_layout(widths = c(2, 1)) + plot_annotation(title = "Distributions of Toronto Monthly Apartment Rent and High Price Indicator (2018)")
 ```
 
-On the left, we see that `price` is approximately symmetric and unimodal around its mean. On the right, we see that the two `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of unbalanced response groups, which could bias results.
+On the left, we see that `price` is approximately symmetric and unimodal around its mean. On the right, we see that the two `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of unbalanced response groups, which could bias modeling results.
 
-Next, we examine possible relationships between variables.
+Next, we examine possible relationships *between* variables.
 
 Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these apartment characteristics.
 
@@ -175,43 +172,73 @@ boxplot_3 <- data %>%
   theme_classic()
 
 boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Toronto Rent Prices by Room Counts (2018)")
+
+# diff(tapply(data$price, data$den, mean))
+# t.test(price ~ den, data = data, var.equal = TRUE)
 ```
 
-For `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest drop from 2 to 2.5 bathrooms and another upwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference-between-means of only (TODO: calculate) dollars. This means that, in terms of potential modeling power, `bathroom` may be better than `bedroom`, and it may be better not to use `den`. TODO: comment on the boxplot overlaps maybe being an issue
+For `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest drop from 2 to 2.5 bathrooms and another upwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference-between-means of only \$87/month. This means that, in terms of potential modeling power, `bathroom` may be better than `bedroom`, and it may be better not to use `den`. TODO: comment on the boxplot overlaps maybe being an issue
 
 \newpage
 
-We're also curious about the correlations between the variables so we plot the upper triangle of a correlation matrix.
+We're also curious about the correlations between the variables so we plot the upper triangle of a (Pearson) correlation matrix.
 
-```{r, echo=FALSE, warnings=FALSE, fig.height=3, fig.width=5, fig.align='center'}
+\vspace{-0.4in}
+
+```{r, echo=FALSE, warnings=FALSE, fig.height=2, fig.width=4, fig.align='center'}
 # Making a correlation matrix
+
 corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
          method = "color",
          type = "upper",
          addCoef.col = "black",
          tl.col = "black",
          tl.srt = 30,
-         tl.cex = 0.8,
+         tl.cex = 0.7,
          cl.ratio = 0.35,
          cl.length = 5,
-         cl.cex = 0.9,
-         number.cex = 0.8,
+         cl.cex = 0.7,
+         number.cex = 0.7,
          col = colorRampPalette(c("#4477AA", "#77AADD", "#FFFFFF", "#EE9988", "#BB4444"))(200),
-         mar = c(2,2,2,2),
+         mar = c(0, 0, 1, 0),
          diag = TRUE)
 ```
 
-The variables with the strongest correlation with `price` are `bathroom` (r = 0.47) and `bathroom` (r = 0.38), though these are only moderately strong linear correlations. `den` is weakly negatively correlated with `price` at r = -0.01. Moreoever, `bedroom` and `bathroom` are moderately correlated at r = 0.50, which may indicate that they're collinear, which may affect our modeling decisions later on.
+\vspace{-0.2in}
 
-In addition, here's a frequency table between `high_price` and covariates:
+The variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the evidence from the boxplots, this further confirms that `den` is weakly correlated with `price` at r = 0.05. Moreoever, `bedroom` and `bathroom` are moderately correlated with each other at r = 0.63, which may indicate that they're collinear, which may affect our modeling decisions later on.
 
-TODO
+In addition, here are frequency tables between `high_price` and `bedroom` and `bathroom`, excluding `den` because we've already seen that it's a weak predictor. TODO: fix column names
 
-Thus, the key take-aways of this exploratory analysis are:
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center'}
+# Making frequency tables
+
+t1 <- data %>%
+  tabyl(bedroom, high_price) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1) %>% 
+  adorn_ns() %>%
+  kable()
+
+t2 <- data %>%
+  tabyl(bathroom, high_price) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1) %>% 
+  adorn_ns() %>%
+  kable()
+
+t1
+t2
+# kables(list(t1, t2))
+```
+
+TODO: commentary
+
+The key take-aways of this exploratory analysis are:
 
 - TODO: outliers removed
 - TODO: no class imbalance for `high_price`
-- TODO: `den` has the weakest linear correlation with `price` as show by the boxplots and correlation metric
+- TODO: `den` has the weakest linear correlation with `price` as show by the boxplots and correlation metric; discuss the other dropped predictors
 
 \newpage
 
