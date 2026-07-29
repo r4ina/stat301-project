@@ -34,8 +34,6 @@ The dataset for this study was retrieved from a public Kaggle repository titled 
 
 The study utilizes Version 3 of the dataset, stored as a single comma-separated values file with a file size of 94.97 KB. The raw file contains `n = 1,124` observational rows across 7 attribute columns, where each row corresponds to a unique apartment listing. There are no missing values in any columns in the raw data.
 
-During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`.
-
 ## Exploratory Data Analysis
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
@@ -69,7 +67,7 @@ data <- data %>%
   # Converting price to a number
   mutate(price = parse_number(price)) %>%
   # Removing outliers
-  filter(!price %in% c(65, 99, 99, 36900, 535000))
+  filter(price > 100 & price < 6000)
 
 # Seeing if there are any NAs
 colSums(is.na(data)) # 0
@@ -80,6 +78,8 @@ data <- data %>%
 ```
 
 <!-- This section may include summary statistics (e.g., means and standard deviations of the variables), graphical displays of the data, and any preliminary conclusions. No models are assumed in this section. -->
+
+During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 9 rows where `price` was either below \$100/month or above \$6,000/month (namely, \$65, \$99, \$99, \$6,000, \$6,500, \$8,000, \$9,750, \$36,900, and $535,000) because these outliers may skew our results. The sample size is now `n = 807`.
 
 Before modeling, we want to find out more about the data.
 
@@ -101,31 +101,29 @@ data %>%
   kable()
 ```
 
-The amount of `bathroom`s ranges from 1 to 3, the amount of `bedroom`s ranges from 1 to 3, and the amount of `den`s ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, `latitude` and `longitude` fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling). So there's nothing unusual about these 4 variables.
+The amount of `bathroom`s ranges from 1 to 3, the amount of `bedroom`s ranges from 1 to 3, and the amount of `den`s ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, `latitude` and `longitude` fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling). So there's nothing unusual about these four variables.
 
-As for `price`, its average value is $2,186/month with a standard deviation of \$787/month. Its minimum is \$150/month and its maximum is \$9,750/month. We decided that these extreme values were reasonable enough to keep in our analysis because while they are `r round((150-2186)/787, 2)` and `r round((9750-2186)/787, 2)` standard deviations above and below the mean (respectively), we felt that they could have genuinely occurred instead of being mistakes.
+As for `price`, its average value is $2,159/month with a standard deviation of \$684/month. Its minimum is \$150/month and its maximum is \$4,900/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to include in the scope of this analysis.
 
 \newpage
 
-We now visualize the distribution of each individual variable.
-
-We plot a histogram see the distribution of `price` and we plot a bar chart showing the amount of 0s and 1s for the new binary variable `high_price`.
+We now plot a histogram to visualize the distribution of `price` and a bar chart showing the class balance of the new binary variable `high_price`.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making histogram of potential response variables
 
 hist_1 <- data %>%
   ggplot(aes(x = price)) +
-  geom_histogram(fill = "skyblue", color = "skyblue", bins = 20) +
-  labs(title = "Distribution of Toronto Monthly Apartment Rents (2018)",
+  geom_histogram(fill = "burlywood2", color = "burlywood2", bins = 20) +
+  labs(# title = "Distribution of Toronto Monthly Apartment Rents (2018)",
        x = "Monthly Rent", # TODO: smaller title
        y = "Frequency") +
   geom_vline(aes(xintercept = mean(price)), 
              color = "black", linewidth = 0.5) +
   annotate("text",
-           x = 2255 + 200,
+           x = 2159 + 200,
            y = 200,
-           label = "Mean Rent: $2,186",
+           label = "Mean Rent: $2,159",
            color = "black",
            hjust = 0) +
   scale_x_continuous(labels = label_dollar()) +
@@ -140,46 +138,14 @@ hist_2 <- data %>%
             vjust = 2, color = "white") +
   theme_classic()
 
-hist_1 + hist_2 + plot_layout(widths = c(2, 1))
+hist_1 + hist_2 + plot_layout(widths = c(2, 1)) + plot_annotation(title = "Distributions of Toronto Monthly Apartment Rent and High Price Indicator (2018)")
 ```
 
-On the left, we see that `price` is slightly right-skewed and unimodal around its mean. Its standard deviation (a measure of spread) is \$1,021/month, around half of its mean. On the right, we see that the 2 `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of an unbalanced response groups, which could bias results.
+On the left, we see that `price` is approximately symmetric and unimodal around its mean. On the right, we see that the two `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of unbalanced response groups, which could bias results.
 
-We also view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
+Next, we examine possible relationships between variables.
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-# Making bar plots of bedroom/bathroom/den counts
-
-bar_1 <- data %>%
-  ggplot(aes(x = bedroom)) +
-  geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Bedrooms", y = "Frequency") +
-  coord_cartesian(ylim = c(0, 700)) +
-  theme_classic()
-
-bar_2 <- data %>%
-  ggplot(aes(x = bathroom)) +
-  geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Bathrooms", y = "Frequency") +
-  coord_cartesian(ylim = c(0, 700)) +
-  theme_classic()
-
-bar_3 <- data %>%
-  mutate(den = as.factor(den)) %>%
-  ggplot(aes(x = den)) +
-  geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Dens", y = "Frequency") +
-  coord_cartesian(ylim = c(0, 700)) +
-  theme_classic()
-
-bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by Room Type")
-```
-
-TODO: maybe this isn't necessary??
-
-\newpage
-
-Next, we examine possible relationships between variables. Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these 3 apartment characteristics.
+Below are boxplots of `price` split by `bedroom`, `bathroom`, and `den` counts in order to see how `price`'s distribution varies by each of these apartment characteristics.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making boxplots of price by bed/bath/den count
@@ -187,7 +153,7 @@ Next, we examine possible relationships between variables. Below are boxplots of
 boxplot_1 <- data %>%
   mutate(bedroom = as.factor(bedroom)) %>%
   ggplot(aes(x = bedroom, y = price)) +
-  geom_boxplot(fill = "skyblue") +
+  geom_boxplot(fill = "burlywood2") +
   labs(y = "Monthly Rent", x = "# of Bedrooms") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
@@ -195,7 +161,7 @@ boxplot_1 <- data %>%
 boxplot_2 <- data %>%
   mutate(bathroom = as.factor(bathroom)) %>%
   ggplot(aes(x = bathroom, y = price)) +
-  geom_boxplot(fill = "skyblue") +
+  geom_boxplot(fill = "burlywood2") +
   labs(y = "Monthly Rent", x = "# of Bathrooms") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
@@ -203,21 +169,23 @@ boxplot_2 <- data %>%
 boxplot_3 <- data %>%
   mutate(den = as.factor(den)) %>%
   ggplot(aes(x = den, y = price)) +
-  geom_boxplot(fill = "skyblue") +
+  geom_boxplot(fill = "burlywood2") +
   labs(y = "Monthly Rent", x = "# of Dens") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
 
-boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Rent Prices by Room Counts")
+boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Toronto Rent Prices by Room Counts (2018)")
 ```
 
-For `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest jump from 2 to 2.5 bathrooms and a downwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference of only (TODO: calculate) dollars. This means that, in terms of potential modeling power, `bathroom` may be better than `bedroom`, and `den` may not be used.
+For `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest drop from 2 to 2.5 bathrooms and another upwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference-between-means of only (TODO: calculate) dollars. This means that, in terms of potential modeling power, `bathroom` may be better than `bedroom`, and it may be better not to use `den`. TODO: comment on the boxplot overlaps maybe being an issue
+
+\newpage
 
 We're also curious about the correlations between the variables so we plot the upper triangle of a correlation matrix.
 
 ```{r, echo=FALSE, warnings=FALSE, fig.height=3, fig.width=5, fig.align='center'}
 # Making a correlation matrix
-corrplot(round(cor(select(data, -high_price)), 2),
+corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
          method = "color",
          type = "upper",
          addCoef.col = "black",
@@ -235,9 +203,15 @@ corrplot(round(cor(select(data, -high_price)), 2),
 
 The variables with the strongest correlation with `price` are `bathroom` (r = 0.47) and `bathroom` (r = 0.38), though these are only moderately strong linear correlations. `den` is weakly negatively correlated with `price` at r = -0.01. Moreoever, `bedroom` and `bathroom` are moderately correlated at r = 0.50, which may indicate that they're collinear, which may affect our modeling decisions later on.
 
-TODO: frequency table b/w `high_price` and covariates
+In addition, here's a frequency table between `high_price` and covariates:
 
-TODO: key take-aways of EDA
+TODO
+
+Thus, the key take-aways of this exploratory analysis are:
+
+- TODO: outliers removed
+- TODO: no class imbalance for `high_price`
+- TODO: `den` has the weakest linear correlation with `price` as show by the boxplots and correlation metric
 
 \newpage
 
@@ -245,7 +219,7 @@ TODO: key take-aways of EDA
 
 <!-- This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
-Now that we have processed our data, we can consider models that can predict rental price based on our other variables. In the previous section, we narrowed down the variables we can use as predictors to number of bedrooms and number of bathrooms. To make use of these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
+Now that we have explored our data, we can consider models that can predict rental price based on our other variables. In the previous section, we narrowed down the variables we can use as predictors to number of bedrooms and number of bathrooms. To make use of these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
 
 ### Multiple Linear Regression
 
@@ -346,12 +320,15 @@ In a binned residuals plot, the majority of data points (approximately 95%) must
 
 ## Conclusion
 
-Summary of Findings and Limitations:
-The Muliple Linear Regression anaysis indicates that both the number of beadrooms and the bathrooms hava a positive relationship with the monthly rent of a property. The Multiple Logistic Regression analysis indicates that both the number of bedrooms and the bathrooms have a positive relationship with the monthly rent. However, as we can see from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and normality of residuals are invailed. These violations affected to the predcition confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable.
-In the logistic regression model predicting whether rent is above average, applying an adjuested 89% confidence level yields a statistically significant positive effect for the number of bathrooms on the likelihood of having above-average rent. This founding relies on an adhoc modification of the significance threshold to fit the observed data. Consequently, the findings from the logistic regression model should be interpreted with caution.
+The multiple linear regression analysis indicates that both the number of bedrooms and the bathrooms have a positive relationship with the monthly rent of a property. The multiple logistic regression analysis indicates that both the number of bedrooms and the bathrooms have a positive relationship with the monthly rent. However, as we can see from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and normality of residuals are invalid. These violations affected to the prediction confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable.
 
-To improve the model's reliablity, three key adjustments are recommended for future research:
-Re-introducing the dropped locattion coordinates will help reducing unexplained variance and standard errors,thereby addressing potential omitted varibale bias. Applying a log transformation to the response variable (ln(prin)) along with removing extreme outliers will normalize the right-skewed price distribution, helping to satisfy the linear regression assumptions of normality and homoscedasticity. Lastly, setting the significant level to the standard 95% confidence threshold will ensure the hypothesis testing remains statistically unbiased.  
+In the logistic regression model predicting whether rent is above average, applying an adjusted 89% confidence level yields a statistically significant positive effect for the number of bathrooms on the likelihood of having above-average rent. This founding relies on an adhoc modification of the significance threshold to fit the observed data. Consequently, the findings from the logistic regression model should be interpreted with caution.
+
+To improve the model's reliability, three key adjustments are recommended for future research:
+
+Re-introducing the dropped location coordinates will help reducing unexplained variance and standard errors,thereby addressing potential omitted variable bias. Applying a log transformation to the response variable (ln(price)) along with removing extreme outliers will normalize the right-skewed price distribution, helping to satisfy the linear regression assumptions of normality and homoscedasticity. Lastly, setting the significant level to the standard 95% confidence threshold will ensure the hypothesis testing remains statistically unbiased.
+
+\newpage
 
 ## References
 
