@@ -30,13 +30,9 @@ In high-density metropolitan areas like Toronto, assessing how specific layout c
 ## Data Description
 
 <!-- This section should describe where the dataset comes from, the sample size, how the data were collected, etc. -->
-### Source and Collection
 The dataset for this study was retrieved from a public Kaggle repository titled [Toronto Apartment Rental Price](https://www.kaggle.com/datasets/rajacsp/toronto-apartment-price/data), compiled by independent creator Raja CSP. According to the dataset documentation, the listings were aggregated and scraped from local rental websites active across Toronto in 2018.
 
-### Structure and Format
-The study utilizes Version 3 of the dataset, stored as a single comma-separated values file (`Toronto_apartment_rentals_2018.csv`) with a total file size of 94.97 KB. The raw file contains $N = 1,124$ observational rows across 7 attribute columns, where each row corresponds to a unique apartment listing. There are no missing values in any columns in the raw data.
-
-The total number of rows in the original dataset is 1,124. There are no missing values in any columns.
+The study utilizes Version 3 of the dataset, stored as a single comma-separated values file with a file size of 94.97 KB. The raw file contains `n = 1,124` observational rows across 7 attribute columns, where each row corresponds to a unique apartment listing. There are no missing values in any columns in the raw data.
 
 During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 5 rows with unusual values for `price` (\$65/month, \$99/month, \$99/month, \$36,900/month, \$535,000/month). These outliers may skew our results so we decided to remove them. The sample size is now `n = 811`.
 
@@ -87,7 +83,7 @@ data <- data %>%
 
 Before modeling, we want to find out more about the data.
 
-We first examine each variable individually. Below are the sample's summary statistics of each variable.
+We first examine sample's summary statistics of each individual numerical variable.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 # Viewing summary stats
@@ -99,45 +95,57 @@ data %>%
   group_by(Variable) %>%
   # Calculating the stats
   summarise(Mean = round(mean(Value, na.rm = TRUE), 2),
-            SD = round(sd(Value, na.rm = TRUE), 2),
-            Min = round(min(Value, na.rm = TRUE), 2),
-            Max = round(max(Value, na.rm = TRUE), 2)) %>%
+            "Standard Deviation" = round(sd(Value, na.rm = TRUE), 2),
+            Minimum = round(min(Value, na.rm = TRUE), 2),
+            Maximum = round(max(Value, na.rm = TRUE), 2)) %>%
   kable()
 ```
 
-TODO: commentary on meaningfulness... There's nothing unusual... As well, `price`'s standard deviation is \$1,021/month, its minimum is \$150/month, and its maximum is \$9,750/month. We decided that...
+The amount of `bathroom`s ranges from 1 to 3, the amount of `bedroom`s ranges from 1 to 3, and the amount of `den`s ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, `latitude` and `longitude` fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling). So there's nothing unusual about these 4 variables.
+
+As for `price`, its average value is $2,186/month with a standard deviation of \$787/month. Its minimum is \$150/month and its maximum is \$9,750/month. We decided that these extreme values were reasonable enough to keep in our analysis because while they are `r round((150-2186)/787, 2)` and `r round((9750-2186)/787, 2)` standard deviations above and below the mean (respectively), we felt that they could have genuinely occurred instead of being mistakes.
 
 \newpage
 
-We also visualize the distribution of each variable individually.
+We now visualize the distribution of each individual variable.
 
-To visualize the distribution of `price`, we plot a histogram.
+We plot a histogram see the distribution of `price` and we plot a bar chart showing the amount of 0s and 1s for the new binary variable `high_price`.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-# Viewing a histogram of price
-data %>%
+# Making histogram of potential response variables
+
+hist_1 <- data %>%
   ggplot(aes(x = price)) +
   geom_histogram(fill = "skyblue", color = "skyblue", bins = 20) +
   labs(title = "Distribution of Toronto Monthly Apartment Rents (2018)",
-       x = "Monthly Rent",
+       x = "Monthly Rent", # TODO: smaller title
        y = "Frequency") +
   geom_vline(aes(xintercept = mean(price)), 
-             color = "black", linetype = "dashed", linewidth = 0.5) +
-  annotate("text", 
+             color = "black", linewidth = 0.5) +
+  annotate("text",
            x = 2255 + 200,
            y = 200,
-           label = "Mean Rent: $2,186", 
-           color = "black", 
+           label = "Mean Rent: $2,186",
+           color = "black",
            hjust = 0) +
   scale_x_continuous(labels = label_dollar()) +
   theme_classic()
+
+hist_2 <- data %>%
+  mutate(high_price = ifelse(high_price == 1, "Yes", "No")) %>%
+  ggplot(aes(x = as.factor(high_price))) +
+  geom_bar(fill = "grey") +
+  labs(x = "Price more than its mean?", y = "Frequency") +
+  geom_text(stat = "count", aes(label = after_stat(count)), 
+            vjust = 2, color = "white") +
+  theme_classic()
+
+hist_1 + hist_2 + plot_layout(widths = c(2, 1))
 ```
 
-The distribution is slightly right-skewed and unimodal around the mean of `mean`. As well, its standard deviation is \$1,021/month, the minimum is \$150/month, and the maximum is \$9,750/month.
- 
-TODO: more commentary
+On the left, we see that `price` is slightly right-skewed and unimodal around its mean. Its standard deviation (a measure of spread) is \$1,021/month, around half of its mean. On the right, we see that the 2 `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of an unbalanced response groups, which could bias results.
 
-Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
+We also view the frequencies of each discrete value of `bedroom`, `bathroom`, and `den`.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Making bar plots of bedroom/bathroom/den counts
@@ -145,14 +153,14 @@ Next, we view the frequencies of each discrete value of `bedroom`, `bathroom`, a
 bar_1 <- data %>%
   ggplot(aes(x = bedroom)) +
   geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Bedrooms", y = "Count") +
+  labs(x = "# of Bedrooms", y = "Frequency") +
   coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
 bar_2 <- data %>%
   ggplot(aes(x = bathroom)) +
   geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Bathrooms", y = "Count") +
+  labs(x = "# of Bathrooms", y = "Frequency") +
   coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
@@ -160,14 +168,14 @@ bar_3 <- data %>%
   mutate(den = as.factor(den)) %>%
   ggplot(aes(x = den)) +
   geom_bar(fill = "darkolivegreen3") +
-  labs(x = "# of Dens", y = "Count") +
+  labs(x = "# of Dens", y = "Frequency") +
   coord_cartesian(ylim = c(0, 700)) +
   theme_classic()
 
 bar_1 + bar_2 + bar_3 + plot_annotation(title = "Frequencies of Room Counts by Room Type")
 ```
 
-TODO: comment on them (such as the unbalanced groups)
+TODO: maybe this isn't necessary??
 
 \newpage
 
@@ -179,7 +187,7 @@ Next, we examine possible relationships between variables. Below are boxplots of
 boxplot_1 <- data %>%
   mutate(bedroom = as.factor(bedroom)) %>%
   ggplot(aes(x = bedroom, y = price)) +
-  geom_boxplot(fill = "lightgrey") +
+  geom_boxplot(fill = "skyblue") +
   labs(y = "Monthly Rent", x = "# of Bedrooms") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
@@ -187,7 +195,7 @@ boxplot_1 <- data %>%
 boxplot_2 <- data %>%
   mutate(bathroom = as.factor(bathroom)) %>%
   ggplot(aes(x = bathroom, y = price)) +
-  geom_boxplot(fill = "lightgrey") +
+  geom_boxplot(fill = "skyblue") +
   labs(y = "Monthly Rent", x = "# of Bathrooms") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
@@ -195,7 +203,7 @@ boxplot_2 <- data %>%
 boxplot_3 <- data %>%
   mutate(den = as.factor(den)) %>%
   ggplot(aes(x = den, y = price)) +
-  geom_boxplot(fill = "lightgrey") +
+  geom_boxplot(fill = "skyblue") +
   labs(y = "Monthly Rent", x = "# of Dens") +
   scale_y_continuous(labels = label_dollar()) +
   theme_classic()
@@ -203,11 +211,9 @@ boxplot_3 <- data %>%
 boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of Rent Prices by Room Counts")
 ```
 
-TODO: comment on them
+For `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest jump from 2 to 2.5 bathrooms and a downwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference of only (TODO: calculate) dollars. This means that, in terms of potential modeling power, `bathroom` may be better than `bedroom`, and `den` may not be used.
 
-TODO: number of observations of each 0/1 in high_price
-
-We're also curious about the correlations between the variables so we plot (the upper triangle of) a correlation matrix.
+We're also curious about the correlations between the variables so we plot the upper triangle of a correlation matrix.
 
 ```{r, echo=FALSE, warnings=FALSE, fig.height=3, fig.width=5, fig.align='center'}
 # Making a correlation matrix
@@ -226,7 +232,10 @@ corrplot(round(cor(select(data, -high_price)), 2),
          mar = c(2,2,2,2),
          diag = TRUE)
 ```
+
 The variables with the strongest correlation with `price` are `bathroom` (r = 0.47) and `bathroom` (r = 0.38), though these are only moderately strong linear correlations. `den` is weakly negatively correlated with `price` at r = -0.01. Moreoever, `bedroom` and `bathroom` are moderately correlated at r = 0.50, which may indicate that they're collinear, which may affect our modeling decisions later on.
+
+TODO: frequency table b/w `high_price` and covariates
 
 TODO: key take-aways of EDA
 
@@ -274,7 +283,7 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
 
 As shown in the tables above, the table produced by the model with interaction is reporting p-values in excess of our predecided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently identify any interaction between the predictors and must proceed with the model without interaction.
 
-The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a $206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant.
+The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a \$206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant.
 
 To ensure that our linear model is appropriate for the data, we need to run some model diagnostics in the form of a residual and Q-Q plot.
 
@@ -327,7 +336,7 @@ tidy(logistic_add, conf.int = TRUE, conf.level = 0.95) %>%
 
 The tables above show that neither model passes the hypothesis tests necessary to prove statistical significance. Of the two models, the results with interaction come much closer. To proceed with our analysis, our only option is to lower our stated level of significance to 89% and continue with the model with interaction. So, keep in mind that any further observations on our logistic regression model will be made with this altered level of significance.
 
-The table of our model with interaction shows that an additional bedroom increases the log odds of a property having high rent by 0.19, an additional bathroom increases the log odds of a property having high rent by 0.57, and .
+The table of our model with interaction shows that an additional bedroom increases the log odds of a property having high rent by 0.19, an additional bathroom increases the log odds of a property having high rent by 0.57, and...
 
 Again we must run some model diagnostics to ensure our model is appropriate for the data. This time we will use a binned residuals plot.
 
@@ -340,6 +349,8 @@ In a binned residuals plot, the majority of data points (approximately 95%) must
 This section should provide overall conclusions, any limitations in the datasets and analyses, and validity of the conclusions.
 
 \newpage
+
+## References
 
 ## Appendix
 
