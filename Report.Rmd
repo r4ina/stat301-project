@@ -337,9 +337,12 @@ In a binned residuals plot, the majority of data points (approximately 95%) must
 
 ## Conclusion
 
-This section should provide overall conclusions, any limitations in the datasets and analyses, and validity of the conclusions.
+Summary of Findings and Limitations:
+The Muliple Linear Regression anaysis indicates that both the number of beadrooms and the bathrooms hava a positive relationship with the monthly rent of a property. The Multiple Logistic Regression analysis indicates that both the number of bedrooms and the bathrooms have a positive relationship with the monthly rent. However, as we can see from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and normality of residuals are invailed. These violations affected to the predcition confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable.
+In the logistic regression model predicting whether rent is above average, applying an adjuested 89% confidence level yields a statistically significant positive effect for the number of bathrooms on the likelihood of having above-average rent. This founding relies on an adhoc modification of the significance threshold to fit the observed data. Consequently, the findings from the logistic regression model should be interpreted with caution.
 
-\newpage
+To improve the model's reliablity, three key adjustments are recommended for future research:
+Re-introducing the dropped locattion coordinates will help reducing unexplained variance and standard errors,thereby addressing potential omitted varibale bias. Applying a log transformation to the response variable (ln(prin)) along with removing extreme outliers will normalize the right-skewed price distribution, helping to satisfy the linear regression assumptions of normality and homoscedasticity. Lastly, setting the significant level to the standard 95% confidence threshold will ensure the hypothesis testing remains statistically unbiased.  
 
 ## Appendix
 
