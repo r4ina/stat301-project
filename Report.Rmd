@@ -5,26 +5,29 @@ author:
 - "Olivia Jiang (82785783)"
 - "Woobin Kim (39017496)"
 - "Raina Tian (11946720)"
-date: "August 2nd, 2026"
-output: 
-  pdf_document: default
+date: "August 2, 2026"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 7)
 ```
 
+\thispagestyle{empty}
+\pagenumbering{arabic}
+\setcounter{page}{0}
+
 \begin{center}
 Project Task Assignments
 \end{center}
 
-Austin did...
+Austin did most of the modeling section...
 
-Olivia did...
+Olivia did most of the exploratory data analysis section...
 
-Raina did...
+Raina wrote the introduction and data description...
 
-Woobin did...
+Woobin wrote the conclusion...
 
 \newpage
 
@@ -251,13 +254,13 @@ The main take-aways of this exploratory analysis are:
 
 <!-- This section should include justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
-Now that we have explored our data, we can consider models that can predict rental price based on our other variables. In the previous section, we narrowed down the variables we can use as predictors to number of bedrooms and number of bathrooms. To make use of these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
+Now that we have explored the data, we can consider models that can predict rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and bathrooms. To use these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
 
 ### Multiple Linear Regression
 
-A multiple linear regression model model generates predictions as a straight line with a slope and intercept.
+A multiple linear regression model generates predictions as a straight line with an intercept and at least one slope.
 
-When making a multiple linear regression model, we must consider whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will be different depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing by creating a model with interaction in R and checking the model's statistics.
+When making a multiple linear regression model, we often consider whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will differ depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing by creating a model with interaction in R and checking the model's statistics.
 
 Results with interaction:
 
@@ -280,18 +283,18 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-As shown in the tables above, the interaction term (denoted as bedroom:bathroom) in the table produced by the model with interaction is reporting p-values in excess of our predecided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently conclusively identify any interaction between the predictors and must proceed with the model without interaction.
+As shown in the tables above, the interaction term (`bedroom:bathroom`) in the table produced by the model with interaction is reporting p-values in excess of our pre-decided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently conclusively identify any interaction between the predictors and must proceed with the model without interaction.
 
 The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a $206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant. The intercept value gives us our baseline values of $1172.76, meaning that our model predicts a one bed one bath condo will have a rental price of $1172.76 + $206.60 + $707.66 = $2087.02.
 
-To ensure that our linear model is appropriate for the data, we need to run some model diagnostics in the form of a residual and Q-Q plot.
+To check if our linear model is appropriate, we run model diagnostics in the form of a residual and Q-Q plot.
 
 ```{r, echo=FALSE, fig.height=6}
 # Residual plot
 plot(linear_add, which = 1)
 ```
 
-For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are discrete rather than continuous the data points are not continuously distributed, making the plot somewhat messy to look at. It shows that while the error approximately follows a normal distribution distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
+For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are discrete rather than continuous the data points are not continuously distributed, making the plot a bit messy. It shows that while the error approximately follows a normal distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
 
 ```{r, echo=FALSE, fig.height=6}
 # Q-Q plot
@@ -334,7 +337,11 @@ Our results show that, much like for our linear model, we cannot conclude that t
 
 The table of our model without interaction shows that an additional bedroom increases the odds of a property having high rent by 1.24 or 24%. However, the p-value for this estimate implies that this conclusion is not statistically significant. The model also found that an additional bathroom increases the odds of a property having high rent by 5.25 or 425%, a finding that is statistically significant.
 
-Again we must run some model diagnostics to ensure our model is appropriate for the data. The most important thing to check for is overdispersion. Our models assume that the distribution of our models response is consistent with a Bernoulli distribution. Overdispersion occurs when our response distribution deviates from this assumption. Our model has a dispersion parameter of 1.025, implying insignificant levels of overdispersion.
+Again we must run some model diagnostics to ensure our model is appropriate for the data.
+
+One of the most important things to check for is overdispersion. Our models assume that the distribution of our models response is consistent with a Bernoulli distribution. Overdispersion occurs when our response distribution deviates from this assumption. Our model has a dispersion parameter of 1.025, implying insignificant levels of overdispersion.
+
+TODO: maybe precision and accuracy metrics
 
 \newpage
 
@@ -342,7 +349,6 @@ As an additional measure, we used a binned residuals plot to check our models su
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Binned residuals plot
-# binnedplot(fitted(logistic_mult), resid(logistic_mult))
 plot(binned_residuals(logistic_mult)) + 
   theme_classic()
 ```
