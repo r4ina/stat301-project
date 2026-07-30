@@ -49,6 +49,8 @@ library(patchwork)
 library(corrplot)
 library(broom)
 library(janitor)
+library(performance)
+library(see)
 
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
@@ -132,7 +134,7 @@ hist_1 <- data %>%
   theme_classic()
 
 hist_2 <- data %>%
-  mutate(high_price = ifelse(high_price == 0, "Rent Below Average", "Rent Above Average")) %>%
+  mutate(high_price = ifelse(high_price == 0, "Rent Below\nAverage", "Rent Above\nAverage")) %>%
   ggplot(aes(x = as.factor(high_price))) +
   geom_bar(fill = "grey") +
   labs(x = "", y = "Frequency") +
@@ -188,7 +190,7 @@ Looking independently at `bedroom`, `price`'s distribution slightly shifts upwar
 
 We're also curious about the correlations between the variables so we plot the upper triangle of a (Pearson) correlation matrix. Pearson correlation, denoted by the letter r, falls in [0, 1]. If two variables are positively correlated, it means that as one gets larger, the other also gets larger; if two variables are negatively correlated, it means that as one gets larger, the other gets smaller.
 
-\vspace{-0.3in}
+\vspace{-0.2in}
 
 ```{r, echo=FALSE, warnings=FALSE, fig.height=2, fig.width=4, fig.align='center'}
 # Making a correlation matrix
@@ -211,7 +213,7 @@ corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
 
 \vspace{-0.1in}
 
-The variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the evidence from the boxplots, this further confirms that `den` is weakly correlated with `price` at r = 0.05. Moreoever, while `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we may keep both during modeling.
+The variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the boxplots' evidence, the matrix further confirms that `den` is weakly correlated with `price` at r = 0.05. And even though `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we may keep both during modeling.
 
 In addition, here are frequency tables between `high_price` and `bedroom` and `bathroom`, excluding `den` because we've already seen that it would be a weak predictor.
 
@@ -247,7 +249,7 @@ The main take-aways of this exploratory analysis are:
 
 ## Models
 
-<!-- This section should include at least two statistical models for the same dataset, justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
+<!-- This section should include justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
 Now that we have explored our data, we can consider models that can predict rental price based on our other variables. In the previous section, we narrowed down the variables we can use as predictors to number of bedrooms and number of bathrooms. To make use of these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
 
@@ -255,15 +257,14 @@ Now that we have explored our data, we can consider models that can predict rent
 
 A multiple linear regression model model generates predictions as a straight line with a slope and intercept.
 
-When making a multiple linear regression model, one of the first things to consider is whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will be different depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing, something which can be checked by creating a model with interaction in R and checking the model's statistics.
+When making a multiple linear regression model, we must consider whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will be different depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing by creating a model with interaction in R and checking the model's statistics.
 
 Results with interaction:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Linear additive model
-
+# Linear multiplicative model
+# TODO: comments on p-values/significance, interpretations of coefficients in the context of our data
 linear_mult <- lm(price ~ bedroom * bathroom, data = data)
-
 tidy(linear_mult, conf.int = TRUE, conf.level = 0.95) %>%
   mutate_if(is.numeric, round, 2) %>%
   kable()
@@ -273,21 +274,15 @@ Results without interaction:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Linear additive model
-
 linear_add <- lm(price ~ bedroom + bathroom, data = data)
-
-# summary(linear_add)
-
-# Coefficients & p-values
-# TODO: comments on p-values/significance, interpretations of coefficients in the context of our data
 tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   mutate_if(is.numeric, round, 2) %>%
   kable()
 ```
 
-As shown in the tables above, the table produced by the model with interaction is reporting p-values in excess of our predecided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently identify any interaction between the predictors and must proceed with the model without interaction.
+As shown in the tables above, the interaction term (denoted as bedroom:bathroom) in the table produced by the model with interaction is reporting p-values in excess of our predecided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently conclusively identify any interaction between the predictors and must proceed with the model without interaction.
 
-The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a \$206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant.
+The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a $206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant. The intercept value gives us our baseline values of $1172.76, meaning that our model predicts a one bed one bath condo will have a rental price of $1172.76 + $206.60 + $707.66 = $2087.02.
 
 To ensure that our linear model is appropriate for the data, we need to run some model diagnostics in the form of a residual and Q-Q plot.
 
@@ -296,7 +291,7 @@ To ensure that our linear model is appropriate for the data, we need to run some
 plot(linear_add, which = 1)
 ```
 
-For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are categorical, the data points are not continuously distributed, making the plot somewhat messy to look at. It shows that while the error approximately follows a normal distribution distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
+For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are discrete rather than continuous the data points are not continuously distributed, making the plot somewhat messy to look at. It shows that while the error approximately follows a normal distribution distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
 
 ```{r, echo=FALSE, fig.height=6}
 # Q-Q plot
@@ -307,9 +302,11 @@ Another way of checking the distributon of the error is a Q-Q plot. If the error
 
 While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model is still useful for making predictions.
 
+\newpage
+
 ### Multiple Logistic Regression
 
-A multiple logistic regression model is used to make predictions for a categorical response variable. To make use of such a model, we converted our response variable (price) into a categorical one by splitting it into two categories for rent above and below the mean value. Thus, our model will be predicting whether a property has above or below average rent, rather than a specific value.
+A multiple logistic regression model is used to make predictions for a binary response variable. To make use of such a model, we converted our response variable (price) into a binary one by splitting it into two categories for rent above and below the mean value. Thus, our model will be predicting whether a property has above or below average rent, rather than a specific value.
 
 Once again, we need to begin by checking for interaction between predictors.
 
@@ -318,7 +315,6 @@ Results with interaction:
 ```{r, echo=FALSE}
 # Multiplicative logistic model
 logistic_mult <- glm(high_price ~ bedroom * bathroom, data = data)
-
 tidy(logistic_mult, conf.int = TRUE, conf.level = 0.95) %>%
   mutate_if(is.numeric, round, 2) %>%
   kable()
@@ -329,24 +325,29 @@ Results without interaction:
 ```{r, echo=FALSE}
 # Additive logistic model
 logistic_add <- glm(high_price ~ bedroom + bathroom, data = data)
-
-# summary(logistic_add)
-
-# Coefficients & p-values
 tidy(logistic_add, conf.int = TRUE, conf.level = 0.95) %>%
   mutate_if(is.numeric, round, 2) %>%
   kable()
 ```
 
-The tables above show that neither model passes the hypothesis tests necessary to prove statistical significance. Of the two models, the results with interaction come much closer. To proceed with our analysis, our only option is to lower our stated level of significance to 89% and continue with the model with interaction. So, keep in mind that any further observations on our logistic regression model will be made with this altered level of significance.
+Our results show that, much like for our linear model, we cannot conclude that there is significant interaction between our predictors. For that reason, we will proceed with our model without interaction.
 
-The table of our model with interaction shows that an additional bedroom increases the log odds of a property having high rent by 0.19, an additional bathroom increases the log odds of a property having high rent by 0.57, and...
+The table of our model without interaction shows that an additional bedroom increases the odds of a property having high rent by 1.24 or 24%. However, the p-value for this estimate implies that this conclusion is not statistically significant. The model also found that an additional bathroom increases the odds of a property having high rent by 5.25 or 425%, a finding that is statistically significant.
 
-Again we must run some model diagnostics to ensure our model is appropriate for the data. This time we will use a binned residuals plot.
+Again we must run some model diagnostics to ensure our model is appropriate for the data. The most important thing to check for is overdispersion. Our models assume that the distribution of our models response is consistent with a Bernoulli distribution. Overdispersion occurs when our response distribution deviates from this assumption. Our model has a dispersion parameter of 1.025, implying insignificant levels of overdispersion.
 
-(insert binned residuals plot here).
+\newpage
 
-In a binned residuals plot, the majority of data points (approximately 95%) must fall within the generated error bounds (Ludecke et al., n.d.). As you can see, our model easily meets this criteria as all of the data points fall within these bounds.
+As an additional measure, we used a binned residuals plot to check our models suitability for our data.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Binned residuals plot
+# binnedplot(fitted(logistic_mult), resid(logistic_mult))
+plot(binned_residuals(logistic_mult)) + 
+  theme_classic()
+```
+
+In a binned residuals plot, the majority of data points (approximately 95%) must fall within the generated error bounds for the model to be considered appropriate for the data (Ludecke et al., n.d.). As you can see, our model easily meets this criteria as all of the data points fall within these bounds.
 
 ## Conclusion
 
