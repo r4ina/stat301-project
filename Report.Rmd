@@ -111,7 +111,7 @@ data %>%
 
 The amount of `bathroom`s ranges from 1 to 3, the amount of `bedroom`s ranges from 1 to 3, and the amount of `den`s ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, `latitude` and `longitude` fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling). So there's nothing unusual about these four variables.
 
-As for `price`, its average value is $2,159/month with a standard deviation of \$684/month. Its minimum is \$150/month and its maximum is \$4,900/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to include in the scope of this analysis.
+As for `price`, its average value is $2,159/month with a standard deviation of \$684/month. Its minimum is \$150/month and its maximum is \$4,900/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to keep.
 
 \newpage
 
@@ -191,7 +191,7 @@ Looking independently at `bedroom`, `price`'s distribution slightly shifts upwar
 
 \newpage
 
-We're also curious about the correlations between the variables so we plot the upper triangle of a (Pearson) correlation matrix. Pearson correlation, denoted by the letter r, falls in [0, 1]. If two variables are positively correlated, it means that as one gets larger, the other also gets larger; if two variables are negatively correlated, it means that as one gets larger, the other gets smaller.
+We're also curious about the correlations between the variables so we plot the upper triangle of a (Pearson) correlation matrix. Pearson correlation, denoted by the letter r, falls in [0, 1]. If two variables are positively correlated, it means that as one gets larger, the other also tends to get larger; if two variables are negatively correlated, it means that as one gets larger, the other tends to get smaller.
 
 \vspace{-0.2in}
 
@@ -216,7 +216,7 @@ corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
 
 \vspace{-0.1in}
 
-The variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the boxplots' evidence, the matrix further confirms that `den` is weakly correlated with `price` at r = 0.05. And even though `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we may keep both during modeling.
+Looking at the rightmost column, the variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the boxplots' evidence, the matrix further confirms that `den` is weakly correlated with `price` at r = 0.05. And even though `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we may keep both during modeling.
 
 In addition, here are frequency tables between `high_price` and `bedroom` and `bathroom`, excluding `den` because we've already seen that it would be a weak predictor.
 
@@ -242,7 +242,7 @@ data %>%
 
 Most of the data is on 1-bedroom or 1-bathroom units with the least data on units with 1.5, 2.5, or 3 bathrooms. Expectedly, most (62%) of the below-average units have 1 bedroom and 1 bathroom.
 
-The main take-aways of this exploratory analysis are:
+The main findings of this exploratory analysis are:
 \vspace{-0.1in}
 
 1. There is no class imbalance in `high_price` (for the purpose of logistic regression) because 53% vs. 47% of the observations have a `price` above vs. below average. Class imbalance, such as 90% vs. 5%, could bias a model's intercept and produce a poor model that maximizes accuracy by simply predicting the majority class.
@@ -254,19 +254,18 @@ The main take-aways of this exploratory analysis are:
 
 <!-- This section should include justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
-Now that we have explored the data, we can consider models that can predict rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and bathrooms. To use these predictors, we have two options: a multiple linear regression and a multiple logistic regression.
+Now that we have explored the data, we can consider models that can model rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and bathrooms. To use these predictors, we choose two model types: a multiple linear regression on `price` because it is continuous and a multiple logistic regression on `high_price` because it is binary.
 
 ### Multiple Linear Regression
 
-A multiple linear regression model generates predictions as a straight line with an intercept and at least one slope.
+A multiple linear regression model models a continuous response variable in terms of the predictors as a straight line with an intercept and at least one slope.
 
-When making a multiple linear regression model, we often consider whether or not interaction exists between covariates. If there is interaction, then the slope of the prediction line will differ depending on the value of the covariates; if not the slope is constant. This can be checked with hypothesis testing by creating a model with interaction in R and checking the model's statistics.
+When making this model type, we often consider whether interaction between covariates is statistically significance. If it is, then the slope of the prediction line differs depending on the value of the covariates, otherwise the slope is constant. Statistical significance can be checked with hypothesis testing by creating a model with interaction and checking its statistics.
 
 Results with interaction:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Linear multiplicative model
-# TODO: comments on p-values/significance, interpretations of coefficients in the context of our data
 linear_mult <- lm(price ~ bedroom * bathroom, data = data)
 tidy(linear_mult, conf.int = TRUE, conf.level = 0.95) %>%
   mutate_if(is.numeric, round, 2) %>%
@@ -283,27 +282,43 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-As shown in the tables above, the interaction term (`bedroom:bathroom`) in the table produced by the model with interaction is reporting p-values in excess of our pre-decided level of significance (95%, necessitating a value below 0.05). Thus, we cannot confidently conclusively identify any interaction between the predictors and must proceed with the model without interaction.
+In first table, the interaction term (`bedroom:bathroom`) has a p-value of 0.11 in excess of our pre-decided level of significance of 0.05. Thus, we cannot confidently identify any interaction between the predictors and choose to proceed with the model without interaction.
 
-The estimate column in the table for the non-interaction model shows that our prediction line will have an intercept of 1026.44. It shows that an additional bathroom in a property is associated with a $206.60 increase in monthly rent when number of bathrooms is held constant and that an additional bathroom in a property is associated with a $707.66 increase in rent when number of bedrooms is held constant. The intercept value gives us our baseline values of $1172.76, meaning that our model predicts a one bed one bath condo will have a rental price of $1172.76 + $206.60 + $707.66 = $2087.02.
+The `estimate` column in the table for the non-interaction model shows a prediction line of the form:
 
-To check if our linear model is appropriate, we run model diagnostics in the form of a residual and Q-Q plot.
+$$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-```{r, echo=FALSE, fig.height=6}
+Its intercept shows that the baseline prediction for a unit with no bathrooms or bedrooms is \$1172.76, which could represent costs for utilities and other living areas, like the kitchen. The slope values show that an additional bathroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is held constant at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is held constant at any value. For example, the model predicts that a one-bed, one-bath condo has a rental price of \$1172.76 + \$187.90 + \$592.21 = $1952.87.
+
+\newpage
+
+To check if the fitted model is appropriate, we run model diagnostics in the form of a residual plot and a Q-Q plot.
+
+TODO: explain what a residual plot is
+
+\vspace{-0.7in}
+
+```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Residual plot
 plot(linear_add, which = 1)
 ```
 
-For a linear model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots offer a convenient visual representation of this error. In a residual plot, error should be distributed normally and evenly around a horizontal line at y = 0. As you can see in the plot above, because our predictors are discrete rather than continuous the data points are not continuously distributed, making the plot a bit messy. It shows that while the error approximately follows a normal distribution, but with larger variance around certain areas in the x axis, meaning the variance is not perfectly consistent.
+For the fitted model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots visualize these errors. In a residual plot, errors should be distributed normally and evenly around a horizontal line at r = 0. Because our predictors are discrete rather than continuous, the data points are not continuously distributed, so the plot is a bit messy. The plot shows that while the error approximately follows a normal distribution, but with larger variance around certain areas in the x-axis, meaning that the variance is not perfectly consistent.
 
-```{r, echo=FALSE, fig.height=6}
+\newpage
+
+Another way of checking the distribution of the error is via a Q-Q plot. If the error is normally distributed with equal variance, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
+
+\vspace{-0.7in}
+
+```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Q-Q plot
 plot(linear_add, which = 2)
 ```
 
-Another way of checking the distributon of the error is a Q-Q plot. If the error is normally distributed with equal variance, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein X = Y. The Q-Q plot of our linear model shows the data following this line for the most part, but diverging at the beginning and the end, implying that our model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the model, such as log transformation and predicting the square root of the response variable, were unsuccesful in creating a more favourable distribution.
+The Q-Q plot of our linear model shows the data following this line for the most part, but diverging at the beginning and the end, implying that our model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the model, such as log transformation and predicting the square root of the response variable, were unsuccessful in creating a more favourable distribution.
 
-While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model is still useful for making predictions.
+While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model can still be useful for predicting.
 
 \newpage
 
@@ -345,15 +360,15 @@ TODO: maybe precision and accuracy metrics
 
 \newpage
 
-As an additional measure, we used a binned residuals plot to check our models suitability for our data.
+As an additional assessment, we use a binned residuals plot. In a binned residuals plot, the majority of data points (approximately 95%) must fall within the generated error bounds for the model to be considered appropriate for the data (Ludecke et al., n.d.).
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=4}
 # Binned residuals plot
 plot(binned_residuals(logistic_mult)) + 
   theme_classic()
 ```
 
-In a binned residuals plot, the majority of data points (approximately 95%) must fall within the generated error bounds for the model to be considered appropriate for the data (Ludecke et al., n.d.). As you can see, our model easily meets this criteria as all of the data points fall within these bounds.
+As you can see, our model easily meets this criteria as all of the data points fall within these bounds.
 
 ## Conclusion
 
