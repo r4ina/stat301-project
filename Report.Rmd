@@ -21,13 +21,15 @@ knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 7)
 Project Task Assignments
 \end{center}
 
-Austin did most of the modeling section...
+Raina wrote most of the introduction and data description.
 
-Olivia did most of the exploratory data analysis section...
+Olivia did most of the exploratory data analysis section.
 
-Raina wrote the introduction and data description...
+Austin did most of the modeling section.
 
-Woobin wrote the conclusion...
+Woobin wrote most of the conclusion.
+
+All members contributed to editing and proofreading the project as a whole.
 
 \newpage
 
@@ -303,7 +305,7 @@ TODO: explain what a residual plot is
 plot(linear_add, which = 1)
 ```
 
-For the fitted model to be appropriate, the error around the trend/prediction line should be consistent and normally distributed. Residual plots visualize these errors. In a residual plot, errors should be distributed normally and evenly around a horizontal line at r = 0. Because our predictors are discrete rather than continuous, the data points are not continuously distributed, so the plot is a bit messy. The plot shows that while the error approximately follows a normal distribution, but with larger variance around certain areas in the x-axis, meaning that the variance is not perfectly consistent.
+For the fitted model to be appropriate, the error around the trend line should be consistent and normally distributed. Residual plots visualize these errors. In a residual plot, errors should be distributed normally and evenly around a horizontal line at r = 0. Because our predictors are discrete rather than continuous, the data points are not continuously distributed, so the plot is a bit messy. While the error approximately follows a normal distribution, there is larger variance around certain areas in the x-axis, so the variance is not perfectly consistent.
 
 \newpage
 
