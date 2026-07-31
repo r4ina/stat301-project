@@ -256,13 +256,13 @@ The main findings of this exploratory analysis are:
 
 <!-- This section should include justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
 
-Now that we have explored the data, we can consider models that can model rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and bathrooms. To use these predictors, we choose two model types: a multiple linear regression on `price` because it is continuous and a multiple logistic regression on `high_price` because it is binary.
+Now that we have explored the data, we can consider models that can model rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and the number of bathrooms. To make use of these predictors, we chose two model types: a multiple linear regression on `price` because it is continuous and a multiple logistic regression on `high_price` because it is binary.
 
 ### Multiple Linear Regression
 
 A multiple linear regression model models a continuous response variable in terms of the predictors as a straight line with an intercept and at least one slope.
 
-When making this model type, we often consider whether interaction between covariates is statistically significance. If it is, then the slope of the prediction line differs depending on the value of the covariates, otherwise the slope is constant. Statistical significance can be checked with hypothesis testing by creating a model with interaction and checking its statistics.
+When making this model type, we often consider whether interaction between covariates is statistically significant. If it is, then the slope of the prediction line differs depending on the value of the covariates, otherwise the slope is constant. Statistical significance can be checked with hypothesis testing by creating a model with interaction and checking its statistics.
 
 Results with interaction:
 
