@@ -284,41 +284,41 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-In first table, the interaction term (`bedroom:bathroom`) has a p-value of 0.11 in excess of our pre-decided level of significance of 0.05. Thus, we cannot confidently identify any interaction between the predictors and choose to proceed with the model without interaction.
+In the first table, the interaction term (`bedroom:bathroom`) has a p-value of 0.11 in excess of our pre-decided level of significance of 0.05. Thus, we cannot confidently identify an interaction between the predictors and choose to proceed with the model without interaction, which has small p-values for all 3 coefficients.
 
 The `estimate` column in the table for the non-interaction model shows a prediction line of the form:
 
 $$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-Its intercept shows that the baseline prediction for a unit with no bathrooms or bedrooms is \$1172.76, which could represent costs for utilities and other living areas, like the kitchen. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is held constant at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is held constant at any value. For example, the model predicts that a one-bed, one-bath condo has a rental price of \$1172.76 + \$187.90 + \$592.21 = $1952.87.
+The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
 
 \newpage
 
-To check if the fitted model is appropriate, we run model diagnostics in the form of a residual plot and a Q-Q plot.
+To check if the fitted model is appropriate, we create visual diagnostics in the form of a residual plot and a Q-Q plot. These essentially check if the assumptions for linear regression to be valid are fulfilled.
 
-TODO: explain what a residual plot is
+A residual plot plots the residuals/errors (the difference between the actual and fitted values) against the fitted values to check for the errors' linearity (i.e., a mean of 0) and constant variance. Errors should be distributed normally and evenly around the e = 0 horizontal line.
 
-\vspace{-0.7in}
+\vspace{-0.6in}
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Residual plot
 plot(linear_add, which = 1)
 ```
 
-For the fitted model to be appropriate, the error around the trend line should be consistent and normally distributed. Residual plots visualize these errors. In a residual plot, errors should be distributed normally and evenly around a horizontal line at r = 0. Because our predictors are discrete rather than continuous, the data points are not continuously distributed, so the plot is a bit messy. While the error approximately follows a normal distribution, there is larger variance around certain areas in the x-axis, so the variance is not perfectly consistent.
+The error appear to have a mean of 0 because the points appear evenly around both sides of e = 0, but the variance is larger at certain areas (like when the fitted values are around 2000 and 3000), so the variance is not perfectly consistent.
 
 \newpage
 
-Another way of checking the distribution of the error is via a Q-Q plot. If the error is normally distributed with equal variance, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
+Another way of checking the distribution of the error is a Q-Q plot. If the error is normally distributed, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
 
-\vspace{-0.7in}
+\vspace{-0.6in}
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Q-Q plot
 plot(linear_add, which = 2)
 ```
 
-The Q-Q plot of our linear model shows the data following this line for the most part, but diverging at the beginning and the end, implying that our model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the model, such as log transformation and predicting the square root of the response variable, were unsuccessful in creating a more favourable distribution.
+The Q-Q plot of the model shows the data following this line for the most part, but the points diverge at the beginning and the end, implying that the model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the response variable, such as a log transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
 
 While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model can still be useful for predicting.
 
