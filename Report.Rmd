@@ -290,7 +290,7 @@ The `estimate` column in the table for the non-interaction model shows a predict
 
 $$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-Its intercept shows that the baseline prediction for a unit with no bathrooms or bedrooms is \$1172.76, which could represent costs for utilities and other living areas, like the kitchen. The slope values show that an additional bathroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is held constant at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is held constant at any value. For example, the model predicts that a one-bed, one-bath condo has a rental price of \$1172.76 + \$187.90 + \$592.21 = $1952.87.
+Its intercept shows that the baseline prediction for a unit with no bathrooms or bedrooms is \$1172.76, which could represent costs for utilities and other living areas, like the kitchen. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is held constant at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is held constant at any value. For example, the model predicts that a one-bed, one-bath condo has a rental price of \$1172.76 + \$187.90 + \$592.21 = $1952.87.
 
 \newpage
 
