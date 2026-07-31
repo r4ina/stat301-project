@@ -25,7 +25,7 @@ Raina wrote most of the introduction and data description.
 
 Olivia did most of the exploratory data analysis section.
 
-Austin did most of the modeling section.
+Austin (group leader) did most of the modeling section.
 
 Woobin wrote most of the conclusion.
 
