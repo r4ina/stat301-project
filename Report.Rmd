@@ -318,7 +318,7 @@ Another way of checking the distribution of the error is a Q-Q plot. If the erro
 plot(linear_add, which = 2)
 ```
 
-The Q-Q plot of the model shows the data following this line for the most part, but the points diverge at the beginning and the end, implying that the model has more extreme data than can be expected under a true normal distribution (Clay, 2015). Applying transformations to the response variable, such as a log transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
+The Q-Q plot of the model shows the data following this line for the most part, but the points diverge at the beginning and the end, implying that the model has more extreme data than can be expected under a true normal distribution (Ford, 2015). Applying transformations to the response variable, such as a log transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
 
 While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model can still be useful for predicting.
 
@@ -381,7 +381,7 @@ logistic_add$deviance / logistic_add$df.residual
 
 \newpage
 
-As an additional assessment, we use a binned residuals plot, where most data points (~95%) should fall within the generated error bounds for the model to be considered appropriate (Ludecke et al., n.d.).
+As an additional assessment, we use a binned residuals plot, where most data points (~95%) should fall within the generated error bounds for the model to be considered appropriate (Lüdecke et al., n.d.).
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=4}
 # Binned residuals plot
@@ -410,7 +410,8 @@ Standard 95% confidence thresholds should be maintained to ensure hypothesis tes
 
 ## References
 
-References will go here.
+Ford, C. (2016, August 26). *Understanding QQ plots.* University of Virginia Library. https://library.virginia.edu/data/articles/understanding-q-q-plots
+Lüdecke, D., Makowski, D., Ben-Shachar, M. S., Patil, I., Waggoner, P., Weirnik, B. M., & Thériault, R. (n.d.). *Binned residuals for binomial logistic regression.* Easystats. Retrieved July 31, 2026, from https://easystats.github.io/performance/reference/binned_residuals.html.
 
 \newpage
 
