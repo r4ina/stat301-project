@@ -6,7 +6,8 @@ author:
 - "Woobin Kim (39017496)"
 - "Raina Tian (11946720)"
 date: "August 2, 2026"
-output: pdf_document
+output:
+  pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -35,7 +36,7 @@ All members contributed to editing and proofreading the project as a whole.
 
 ## Introduction
 
-In high-density metropolitan areas like Toronto, assessing how specific layout configurations influence rental pricing provides valuable insight into market structure and housing affordability. This study examines the relationship between apartment layout characteristics and monthly rent across the city. Specifically, we use multiple linear regression to evaluate how the number of bedrooms, bathrooms, and their interaction effects predict continuous rental prices. To test predictive validity further, we apply binary logistic regression using the same structural features to determine whether a listing classifies as a high-value property. By comparing main-effects and interaction models across both regression frameworks, we assess the overall explanatory power of layout features in Toronto’s housing market.
+In high-density metropolitan areas like Toronto, assessing how specific layout configurations influence rental pricing provides valuable insight into market structure and housing affordability. This study examines the relationship between apartment layout characteristics and monthly rent across the city. Specifically, we use multiple linear regression to evaluate how the number of bedrooms, bathrooms, and their interaction effects predict continuous rental prices. To test predictive validity further, we apply binary logistic regression using the same structural features to determine whether a listing classifies as a high-value property. By comparing main-effects and interaction models across both regression frameworks, we assess the overall explanatory power of layout features in Toronto’s 2018 housing market.
 
 ## Data Description
 
@@ -60,6 +61,7 @@ library(see)
 # Reading the data
 data <- read_csv("Toronto_apartment_rentals_2018.csv")
 
+# Seeing the total number of rows
 nrow(data)
 
 # Seeing how many duplicate rows there are
@@ -120,7 +122,7 @@ As for `price`, its average value is $2,159/month with a standard deviation of \
 We now plot a histogram to visualize the distribution of `price` and a bar chart showing the class balance of the new binary variable `high_price`.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-# Making histogram of potential response variables
+# Visualizing response variables
 
 hist_1 <- data %>%
   ggplot(aes(x = price)) +
@@ -254,8 +256,6 @@ The main findings of this exploratory analysis are:
 
 ## Models
 
-<!-- This section should include justifications of the choices of the models, model diagnostics, parameter estimates and their standard errors and p-values, and interpretation of the results. -->
-
 Now that we have explored the data, we can consider models that can model rental price based on other variables. In the previous section, we narrowed down the variables we can use as predictors to the number of bedrooms and the number of bathrooms. To make use of these predictors, we chose two model types: a multiple linear regression on `price` because it is continuous and a multiple logistic regression on `high_price` because it is binary.
 
 ### Multiple Linear Regression
@@ -280,7 +280,7 @@ Results without interaction:
 # Linear additive model
 linear_add <- lm(price ~ bedroom + bathroom, data = data)
 tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
-  mutate_if(is.numeric, round, 2) %>%
+  mutate(across(where(is.numeric) & !p.value, ~ round(.x, digits = 2))) %>%
   kable()
 ```
 
@@ -290,7 +290,9 @@ The `estimate` column in the table for the non-interaction model shows a predict
 
 $$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
+The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased.
+
+Both slopes are statistically significant at the 0.05 level and `bathroom` has a smaller p-value than `bedroom`, consistent with the EDA results that `bathroom` may be a slightly better predictor. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
 
 \newpage
 
@@ -302,6 +304,7 @@ A residual plot plots the residuals/errors (the difference between the actual an
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Residual plot
+
 plot(linear_add, which = 1)
 ```
 
@@ -309,12 +312,13 @@ The error appear to have a mean of 0 because the points appear evenly around bot
 
 \newpage
 
-Another way of checking the distribution of the error is a Q-Q plot. If the error is normally distributed, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
+A Q-Q plot is another way to check the errors' distribution. If the error is normally distributed, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
 
 \vspace{-0.6in}
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # Q-Q plot
+
 plot(linear_add, which = 2)
 ```
 
@@ -365,21 +369,28 @@ $$\log\left(\frac{\hat{p}}{1-\hat{p}}\right) = -0.04 + 0.05 \cdot \text{bedroom}
 
 where $\hat{p}$ is the expected probability of a property having high rent and $\frac{\hat{p}}{1-\hat{p}}$ is its odds.
 
-An additional bedroom increases the expected *log-odds* of a property having high rent by 0.05 and increases the expected *odds* of a property having high rent by $e^{0.05}$ = 1.05 or 5%. However, the p-value of 0.21 for this estimate implies that this conclusion is not statistically significant at a 0.05 significance level. Similarly, an additional bathroom increases the odds of a property having high rent by $e^{0.36}$ = 1.43 or 43%, which is statistically significant.
+An additional bedroom increases the expected *log-odds* of a property having high rent by 0.05 and increases the expected *odds* of a property having high rent by a factor of $e^{0.05}$ = 1.05 or 5%. However, the p-value of 0.21 for this estimate implies that this conclusion is not statistically significant at a 0.05 significance level. Similarly, an additional bathroom increases the odds of a property having high rent by $e^{0.36}$ = 1.43 or 43%, which is statistically significant.
 
 Again, we do some model diagnostics.
 
 One of the first things to check for is overdispersion, which occurs when our response distribution deviates from the assumption that the distribution of the fitted values is consistent with a Bernoulli distribution. The model has a dispersion parameter of 0.22, implying insignificant levels of overdispersion.
 
+```{r, echo=FALSE}
+# Overdispersion
+
+logistic_add_disp <- glm(high_price ~ bedroom + bathroom, data = data, family = "quasibinomial")
+
+summary(logistic_add_disp)
+```
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 # Overdispersion
+
 logistic_add$deviance / logistic_add$df.residual
 
 # Precision, accuracy, recall, sensitivity
 # TODO
 ```
-
-\newpage
 
 As an additional assessment, we use a binned residuals plot, where most data points (~95%) should fall within the generated error bounds for the model to be considered appropriate (Lüdecke et al., n.d.).
 
@@ -391,11 +402,13 @@ plot(binned_residuals(logistic_mult)) +
 
 Each dot is the average residual for one bin of predicted probabilities and the vertical lines show the uncertainty around that average residual. The gray lines show the acceptable range for residuals. Since 2 of the 6 bins fall outside the range, specifically at the estimated probabilities exceeding 80%, the plot shows that the model fits decently well and that higher predicted probabilities should be more carefully interpreted.
 
+\newpage
+
 ## Conclusion
 
 The multiple linear regression analysis indicates that both the number of bedrooms and bathrooms have a positive relationship with monthly rent. Specifically, holding other variables constant, an additional bedroom increases predicted monthly rent by \$187.90 (p < 0.001), while an additional bathroom increases rent by \$592.21 (p < 0.001). The multiple logistic regression analysis indicates that bathrooms have a statistically significant positive effect on the odds of a property having an above-average rent (p<0.001), increasing the odds by 43% per bathroom, while the effect of bedrooms is not statistically significant at the standard 0.05 level (p = 0.21).
 
-However, as seen from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and the normality of residuals for the linear model are invalid. These violations affect prediction confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable. Consequently, findings regarding property characteristics should be interpreted with caution given potential omitted variable bias.
+However, as seen from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and the normality of residuals for the linear model are not completely valid. These violations affect prediction confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable. Consequently, findings regarding property characteristics should be interpreted with caution given potential omitted variable bias.
 
 To improve model reliability in future research, two key adjustments are recommended:
 
@@ -405,19 +418,19 @@ To improve model reliability in future research, two key adjustments are recomme
 
 Standard 95% confidence thresholds should be maintained to ensure hypothesis testing remains statistically unbiased.
 
-
 \newpage
 
 ## References
 
 Ford, C. (2016, August 26). *Understanding QQ plots.* University of Virginia Library. https://library.virginia.edu/data/articles/understanding-q-q-plots
+
 Lüdecke, D., Makowski, D., Ben-Shachar, M. S., Patil, I., Waggoner, P., Weirnik, B. M., & Thériault, R. (n.d.). *Binned residuals for binomial logistic regression.* Easystats. Retrieved July 31, 2026, from https://easystats.github.io/performance/reference/binned_residuals.html.
 
 \newpage
 
 ## Appendix
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, results='hide', fig.keep='none'}
 # Loading packages
 library(tidyverse)
 library(knitr)
@@ -425,5 +438,203 @@ library(scales)
 library(patchwork)
 library(corrplot)
 library(broom)
+library(janitor)
+library(performance)
+library(see)
+
+# Reading the data
+data <- read_csv("Toronto_apartment_rentals_2018.csv")
+
+# Seeing the total number of rows
+nrow(data)
+
+# Seeing how many duplicate rows there are
+sum(duplicated(data)) # 308
+
+# Viewing duplicate rows
+data[duplicated(data) | duplicated(data, fromLast = TRUE), ]
+
+# Cleaning the data
+data <- data %>%
+  # Removing duplicate rows
+  distinct() %>%
+  # Removing unnecessary columns
+  select(-c(Address)) %>%
+  # Making the column names lowercase
+  rename_with(tolower) %>%
+  # Converting price to a number
+  mutate(price = parse_number(price)) %>%
+  # Removing outliers
+  filter(price > 100 & price < 6000)
+
+# Seeing if there are any NAs
+colSums(is.na(data)) # 0
+
+# Adding a binary response variable (whether price is more than its mean)
+data <- data %>%
+  mutate(high_price = if_else(price > mean(price), 1, 0))
+
+# Viewing summary stats
+data %>%
+  select(-high_price) %>%
+  # Reshaping data into a long format
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
+  # Grouping by the variable
+  group_by(Variable) %>%
+  # Calculating the stats
+  summarise(Mean = round(mean(Value, na.rm = TRUE), 2),
+            "Standard Deviation" = round(sd(Value, na.rm = TRUE), 2),
+            Minimum = round(min(Value, na.rm = TRUE), 2),
+            Maximum = round(max(Value, na.rm = TRUE), 2)) %>%
+  kable()
+
+# Visualizing response variables
+
+hist_1 <- data %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(fill = "burlywood2", color = "burlywood2", bins = 20) +
+  labs(x = "Monthly Rent",
+       y = "Frequency") +
+  geom_vline(aes(xintercept = mean(price)),
+             color = "black", linewidth = 0.5) +
+  annotate("text",
+           x = 2159 + 200,
+           y = 200,
+           label = "Mean: $2,159",
+           color = "black",
+           hjust = 0) +
+  scale_x_continuous(labels = label_dollar()) +
+  theme_classic()
+
+hist_2 <- data %>%
+  mutate(high_price = ifelse(high_price == 0,
+                             "Rent Below\nAverage",
+                             "Rent Above\nAverage")) %>%
+  ggplot(aes(x = as.factor(high_price))) +
+  geom_bar(fill = "grey") +
+  labs(x = "", y = "Frequency") +
+  geom_text(stat = "count", aes(label = after_stat(count)), 
+            vjust = 2, color = "white") +
+  theme_classic()
+
+hist_1 + hist_2 + plot_layout(widths = c(2, 1)) + plot_annotation(
+  title = "Distributions of Toronto Monthly Apartment Rent and High Price Indicator (2018)"
+  )
+
+# Making boxplots of price by bed/bath/den count
+
+boxplot_1 <- data %>%
+  mutate(bedroom = as.factor(bedroom)) %>%
+  ggplot(aes(x = bedroom, y = price)) +
+  geom_boxplot(fill = "burlywood2") +
+  labs(y = "Monthly Rent", x = "# of Bedrooms") +
+  scale_y_continuous(labels = label_dollar()) +
+  theme_classic()
+
+boxplot_2 <- data %>%
+  mutate(bathroom = as.factor(bathroom)) %>%
+  ggplot(aes(x = bathroom, y = price)) +
+  geom_boxplot(fill = "burlywood2") +
+  labs(y = "Monthly Rent", x = "# of Bathrooms") +
+  scale_y_continuous(labels = label_dollar()) +
+  theme_classic()
+
+boxplot_3 <- data %>%
+  mutate(den = as.factor(den)) %>%
+  ggplot(aes(x = den, y = price)) +
+  geom_boxplot(fill = "burlywood2") +
+  labs(y = "Monthly Rent", x = "# of Dens") +
+  scale_y_continuous(labels = label_dollar()) +
+  theme_classic()
+
+boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(
+  title = "Distributions of Toronto Rent Prices by Room Counts (2018)"
+  )
+
+# Making a correlation matrix
+
+par(font = 1)
+
+corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         tl.col = "black",
+         tl.srt = 30,
+         tl.cex = 0.7,
+         cl.ratio = 0.35,
+         cl.length = 5,
+         cl.cex = 0.7,
+         number.cex = 0.7,
+         col = colorRampPalette(c("#4477AA", "#77AADD", "#FFFFFF", "#EE9988", "#BB4444"))(200),
+         mar = c(0, 0, 1, 0),
+         diag = TRUE)
+
+# Making frequency tables
+
+data %>%
+  tabyl(bedroom, high_price) %>%
+  adorn_totals(c("row", "col")) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 0) %>%
+  adorn_ns() %>%
+  kable(col.names = c("# of Bedrooms", "Rent Below Average", "Rent Above Average", "Total"))
+
+data %>%
+  tabyl(bathroom, high_price) %>%
+  adorn_totals(c("row", "col")) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 0) %>%
+  adorn_ns() %>%
+  kable(col.names = c("# of Bathrooms", "Rent Below Average", "Rent Above Average", "Total"))
+
+# Linear multiplicative model
+
+linear_mult <- lm(price ~ bedroom * bathroom, data = data)
+
+tidy(linear_mult, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+
+# Linear additive model
+
+linear_add <- lm(price ~ bedroom + bathroom, data = data)
+
+tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate(across(where(is.numeric) & !p.value, ~ round(.x, digits = 2))) %>%
+  kable()
+
+# Residual plot
+
+plot(linear_add, which = 1)
+
+# Q-Q plot
+
+plot(linear_add, which = 2)
+
+# Multiplicative logistic model
+
+logistic_mult <- glm(high_price ~ bedroom * bathroom, data = data)
+
+tidy(logistic_mult, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+
+# Additive logistic model
+
+logistic_add <- glm(high_price ~ bedroom + bathroom, data = data)
+
+tidy(logistic_add, conf.int = TRUE, conf.level = 0.95) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+
+tidy(logistic_add, conf.int = TRUE, conf.level = 0.95, exponentiate = TRUE) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable()
+
+# Binned residuals plot
+
+plot(binned_residuals(logistic_mult)) + 
+  theme_classic()
 ```
 
