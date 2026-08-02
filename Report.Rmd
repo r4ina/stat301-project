@@ -383,7 +383,7 @@ summary(logistic_add_disp)
 
 As an additional assessment, we use a binned residuals plot, where most data points should fall within the generated error bounds for the model to be considered appropriate (Lüdecke et al., n.d.).
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=4}
 # Binned residuals plot
 
 plot(binned_residuals(logistic_add)) + 
@@ -391,6 +391,8 @@ plot(binned_residuals(logistic_add)) +
 ```
 
 Each dot is the average residual for one bin of predicted probabilities and the vertical lines show the uncertainty around that average residual. The gray lines show the acceptable range for residuals. Since 1 of 6 bins fall outside the range, at the estimated probabilities exceeding 90%, the plot shows that the model fits decently well and that higher predicted probabilities should be more carefully interpreted.
+
+\newpage
 
 ## Conclusion
 
