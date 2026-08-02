@@ -396,12 +396,13 @@ plot(binned_residuals(logistic_add)) +
 ```
 
 Each dot is the average residual for one bin of predicted probabilities and the vertical lines show the uncertainty around that average residual. The gray lines show the acceptable range for residuals. Since 1 of 6 bins fall outside the range, at the estimated probabilities exceeding 90%, the plot shows that the model fits decently well and that higher predicted probabilities should be more carefully interpreted.
+\newpage
 
 ## Conclusion
 
 Both the exploratory data analysis and the multiple linear regression analysis indicate that both the number of bedrooms and bathrooms have a positive relationship with monthly rent. Specifically, holding other variables constant, an additional bedroom increases predicted monthly rent by \$187.90 (p < 0.001), while an additional bathroom increases rent by \$592.21 (p < 0.001). The multiple logistic regression analysis indicates that bathrooms have a statistically significant positive effect on the odds of a property having an above-average rent (p < 0.001), increasing the odds by 425% per bathroom, while the effect of bedrooms is not statistically significant at the standard 0.05 level (p = 0.21).
 
-However, as seen from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and the normality of residuals for the linear model are not completely valid. These violations affect prediction confidence intervals and the p-values. Namely, the current MLR model results cannot be considered fully reliable. Consequently, findings regarding property characteristics should be interpreted with caution given potential omitted variable bias.
+However, as seen from the residual plot and the Q-Q plot, the key assumptions of homoscedasticity and the normality of residuals for the linear model are not completely valid. These violations affect prediction confidence intervals and the p-values. Hence, the current MLR model results cannot be considered fully reliable. Consequently, findings regarding property characteristics should be interpreted with caution given potential omitted variable bias.
 
 To improve model reliability in future research, we suggest some possible adjustments. For example, re-introducing location by creating neighbourhood clusters may help reduce unexplained variance and standard errors, thereby addressing potential omitted variable bias. As well, collecting continuous structural variables like square footage alongside discrete room counts may help normalize the residual distribution. Standard 95% confidence thresholds should be maintained to ensure hypothesis testing remains statistically unbiased.
 
