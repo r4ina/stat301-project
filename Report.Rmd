@@ -305,11 +305,11 @@ A residual plot plots the residuals/errors (the difference between the actual an
 plot(linear_add, which = 1)
 ```
 
-The error appear to have a mean of 0 because the points appear evenly around both sides of e = 0, but the variance is larger at certain areas (like when the fitted values are around 2000 and 3000), so the variance is not perfectly consistent.
+The error appear to have a mean of 0 because the points appear evenly around both sides of e = 0, but the variance is larger at certain areas (like when the fitted values are around 2000 and 3000), so the variance is not perfectly consistent. (Applying transformations to the predictors, such as a squared transformation, were unsuccessful in creating a more favourable distribution.)
 
 \newpage
 
-A Q-Q plot is another way to check the errors' distribution. If the error is normally distributed, then a Q-Q plot will show all data points distributed along a straight, sloped line wherein x = y.
+A Q-Q plot is another way to check the errors' distribution. If the error is normally distributed, then a Q-Q plot shows the data points closely distributed along a straight, sloped line wherein x = y.
 
 \vspace{-0.6in}
 
@@ -362,7 +362,7 @@ Like our linear model, we cannot conclude that there is significant interaction 
 
 The `estimate` column in the first table for the non-interaction model shows a prediction line of the form:
 
-$$\log\left(\frac{\hat{p}}{1-\hat{p}}\right) = -0.04 + 0.22 \cdot \text{bedroom} + 1.66 \cdot \text{bathroom}$$
+$$\log\left(\frac{\hat{p}}{1-\hat{p}}\right) = -2.41 + 0.22 \cdot \text{bedroom} + 1.66 \cdot \text{bathroom}$$
 
 where $\hat{p}$ is the expected probability of a property having high rent and $\frac{\hat{p}}{1-\hat{p}}$ is its odds.
 
