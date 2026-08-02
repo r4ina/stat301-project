@@ -240,7 +240,7 @@ data %>%
   kable(col.names = c("# of Bathrooms", "Rent Below Average", "Rent Above Average", "Total"))
 ```
 
-From these tables, we see that of the data is on 1-bedroom or 1-bathroom units with the least data on units with 1.5, 2.5, or 3 bathrooms. Also, expectedly, most (62%) of units with a price below average have 1 bedroom and 1 bathroom.
+From these tables, we see that most of the data is on 1-bedroom or 1-bathroom units with the least data on units with 1.5, 2.5, or 3 bathrooms. Also, expectedly, most (62%) of units with a price below average have 1 bedroom and 1 bathroom.
 
 The main findings of this exploratory analysis are:
 \vspace{-0.1in}
@@ -290,7 +290,9 @@ The `estimate` column in the second table shows a prediction line of the form:
 
 $$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased. Both slopes are statistically significant at the 0.05 level and `bathroom` has a smaller p-value than `bedroom`, consistent with the EDA results that `bathroom` may be a slightly better predictor. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
+The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased.
+
+Both slopes are statistically significant at the 0.05 level and `bathroom` has a smaller p-value than `bedroom`, consistent with the EDA results that `bathroom` may be a slightly better predictor. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
 
 \newpage
 
