@@ -109,7 +109,7 @@ data %>%
   kable()
 ```
 
-The amount of bathrooms ranges from 1 to 3, the amount of bedrooms ranges from 1 to 3, and the amount of dens ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, latitude and longitude fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling because geographic effects are probably not easily linearly interpretable). So there's nothing unusual about these four variables.
+The amount of bathrooms ranges from 1 to 3, the amount of bedrooms ranges from 1 to 3, and the amount of dens ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, latitude and longitude fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling because geographic effects are probably not easily linearly interpretable). So there's nothing unusual about these five variables.
 
 As for `price`, its average value is $2,159.05/month with a standard deviation of \$684.27/month. Its minimum is \$150.00/month and its maximum is \$4,900.00/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to keep.
 
