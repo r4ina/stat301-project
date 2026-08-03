@@ -35,7 +35,7 @@ All members contributed to editing and proofreading the project as a whole.
 
 ## Introduction
 
-In high-density metropolitan areas like Toronto, assessing how specific layout configurations influence rental pricing provides valuable insight into market structure and housing affordability. This study examines the relationship between apartment layout characteristics and monthly rent across the city. Specifically, we use multiple linear regression to evaluate how the number of bedrooms, bathrooms, and any interaction effects predict continuous rental prices. To test predictive validity further, we apply binary logistic regression using the same structural features to determine whether a listing classifies as a high-value property. By comparing main-effects and interaction models across both regression frameworks, we assess the overall explanatory power of layout features in Toronto’s 2018 housing market.
+In high-density metropolitan areas like Toronto, assessing how specific layout configurations influence rental pricing could provide valuable insight into market structure and housing affordability. This study examines the relationship between apartment layout characteristics and monthly rent across the city. Specifically, we use multiple linear regression to evaluate how the number of bedrooms, bathrooms, and any interaction effects predict continuous rental prices. To test predictive validity further, we apply binary logistic regression using the same structural features to determine whether a listing classifies as a high-value property. By comparing main-effects and interaction models across both regression frameworks, we assess the overall explanatory power of layout features in Toronto’s 2018 housing market.
 
 ## Data Description
 
@@ -87,7 +87,7 @@ data <- data %>%
   mutate(high_price = if_else(price > mean(price), 1, 0))
 ```
 
-During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 9 rows where the price was either below \$100/month or above \$6,000/month (namely, \$65, \$99, \$99, \$6,000, \$6,500, \$8,000, \$9,750, \$36,900, and $535,000) because these outliers may skew our results. The sample size is now `n = 807`.
+During data cleaning, we removed 308 duplicates which likely occurred because the data came from multiple sources. We also removed 9 rows where the price was either below \$100/month or above \$6,000/month (namely, \$65, \$99, \$99, \$6,000, \$6,500, \$8,000, \$9,750, \$36,900, and $535,000) because these outliers may skew our results. The sample size is now n = 807.
 
 Before modeling, we want to find out more about the data.
 
@@ -109,9 +109,9 @@ data %>%
   kable()
 ```
 
-The amount of bathrooms ranges from 1 to 3, the amount of bedrooms ranges from 1 to 3, and the amount of dens ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, latitude and longitude fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling because geographic effects on a target variable are probably not as linear or easily linearly interpretable). So there's nothing unusual about these four variables.
+The amount of bathrooms ranges from 1 to 3, the amount of bedrooms ranges from 1 to 3, and the amount of dens ranges from 0 to 1. The average amount of bedrooms is slightly higher than the average amount of bathrooms, and most apartment's don't have any dens, shown by its mean of 0.15. This makes sense - an apartment should have a bedroom and bathroom whereas a den is optional. Also, latitude and longitude fall in the valid range of [-90, 90] and [-180, 180] respectively (though we won't use these variables in modeling because geographic effects are probably not easily linearly interpretable). So there's nothing unusual about these four variables.
 
-As for `price`, its average value is $2,159/month with a standard deviation of \$684/month. Its minimum is \$150/month and its maximum is \$4,900/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to keep.
+As for `price`, its average value is $2,159.05/month with a standard deviation of \$684.27/month. Its minimum is \$150.00/month and its maximum is \$4,900.00/month. While these minimum and maximum values are `r round((150-2186)/787, 2)` and `r round((4900-2159)/684, 2)` standard deviations above and below the mean (respectively), we feel that they are reasonable enough to keep.
 
 \newpage
 
@@ -148,7 +148,7 @@ hist_2 <- data %>%
 hist_1 + hist_2 + plot_layout(widths = c(2, 1)) + plot_annotation(title = "Distributions of Toronto Monthly Apartment Rent and High Price Indicator (2018)")
 ```
 
-On the left, we see that `price` is approximately symmetric and unimodal around its mean. On the right, we see that the two `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of unbalanced response groups, which could bias modeling results.
+On the left, we see that `price` is approximately symmetric and unimodal around its mean after removing the aforementioned outliers. On the right, we see that the two `high_price` groups are approximately balanced; this means that logistic regression won't run into the issue of unbalanced response groups, which could bias modeling results.
 
 Next, we examine possible relationships *between* variables.
 
@@ -187,11 +187,11 @@ boxplot_1 + boxplot_2 + boxplot_3 + plot_annotation(title = "Distributions of To
 # t.test(price ~ den, data = data, var.equal = TRUE)
 ```
 
-Looking independently at `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest drop from 2 to 2.5 bathrooms and another upwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference-between-means of only \$87/month. As well, within each group of boxplots, the distributions overlap with each other, so these predictors may not produce strong modeling results. Nonetheless, in terms of potential modeling power, `bathroom` may be better than `bedroom` and it may be better not to use `den`.
+Looking independently at `bedroom`, `price`'s distribution slightly shifts upwards by a few hundred dollars for each additional bedroom. For `bathroom`, the distribution also moves upwards with the biggest drop from 2 to 2.5 bathrooms and another upwards shift in the distribution from 2.5 to 3 bathrooms. For `den`, the distribution is roughly equal for both groups with a difference-between-means of only \$87/month. As well, within each group of boxplots, the distributions overlap with each other, so these predictors may not produce strong modeling results. Nonetheless, in terms of potential modeling power, we see that `bathroom` may be better than `bedroom` and it may be better not to use `den`.
 
 \newpage
 
-We're also curious about the correlations between the variables so we plot the upper triangle of a (Pearson) correlation matrix. Pearson correlation (r) falls in [-1, 1]. If two variables are positively correlated, it means that as one gets larger, the other also tends to get larger. If two variables are negatively correlated, it means that as one gets larger, the other tends to get smaller.
+We're also curious about the correlations between the variables so we plot the upper triangle of a Pearson correlation matrix. Pearson correlation (r) falls in [-1, 1]. If two variables are positively correlated, it means that as one gets larger, the other also tends to get larger. If two variables are negatively correlated, it means that as one gets larger, the other tends to get smaller.
 
 \vspace{-0.2in}
 
@@ -216,7 +216,7 @@ corrplot(round(cor(select(data, -c(high_price, lat, long))), 2),
 
 \vspace{-0.1in}
 
-Looking at the rightmost column, the variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the boxplots' evidence, the matrix further confirms that `den` is weakly correlated with `price` at r = 0.05. And even though `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we may keep both during modeling.
+Looking at the rightmost column, the variables with the strongest linear correlation with `price` are `bathroom` (r = 0.47) then `bedroom` (r = 0.39), though these are only moderately strong. In addition to the boxplots' evidence, the matrix further confirms that `den` is weakly correlated with `price` at r = 0.05. And even though `bedroom` and `bathroom` are moderately correlated at r = 0.63, putting models at risk of multicollinearity, both variables measure different characteristics of an apartment, so we will keep both during modeling.
 
 In addition, here are frequency tables between `high_price` and `bedroom` and `bathroom`, excluding `den` because we've already seen that it would be a weak predictor.
 
@@ -240,13 +240,13 @@ data %>%
   kable(col.names = c("# of Bathrooms", "Rent Below Average", "Rent Above Average", "Total"))
 ```
 
-From these tables, we see that most of the data is on 1-bedroom or 1-bathroom units with the least data on units with 1.5, 2.5, or 3 bathrooms. Also, expectedly, most (62%) of units with a price below average have 1 bedroom and 1 bathroom.
+From these tables, we see that we have the least data on units with 1.5, 2.5, or 3 bathrooms, so those groups may be underrepresented. We also see that most (62%) one-bedroom or one-bathroom units have a price below average and most two- or three-bedroom units have a price above average. However, we can't tell if these differences are statistically significant, so we will turn to modeling for that.
 
 The main findings of this exploratory analysis are:
 \vspace{-0.1in}
 
-1. There is no class imbalance in `high_price` (for the purpose of logistic regression) because 53% vs. 47% of the observations have a `price` above vs. below average. Class imbalance, such as 90% vs. 5%, could bias a model's intercept and produce a poor model that maximizes accuracy by simply predicting the majority class.
-2. In terms of predictive ability, `den` likely has the weakest linear relationship with `price`, as shown by the very similar boxplots and Pearson correlation of 0.05, and we exclude `latitude` and `longitude` because geographic effects on a target variable are probably not as linear or straightforward as these coordinates. This leaves `bedroom` and `bathroom` as the covariates remaining.
+1. There is no class imbalance in `high_price` (for the purpose of logistic regression) because 53% vs. 47% of the observations have a `price` above vs. below average. Class imbalance, such as 95% vs. 5%, could produce a poor model that maximizes accuracy by simply predicting the majority class.
+2. In terms of predictive ability, `den` likely has the weakest linear relationship with `price`, as shown by the heavily overlapping boxplots and Pearson correlation of 0.05, and we exclude `latitude` and `longitude` because geographic effects are probably not as linear or straightforward as these coordinates. This leaves `bedroom` and `bathroom` as the remaining covariates.
 
 \newpage
 
@@ -258,7 +258,7 @@ Now that we have explored the data, we can consider models that can model rental
 
 A multiple linear regression model models a continuous response variable in terms of the predictors as a straight line with an intercept and at least one slope.
 
-When making this model type, we often consider whether interaction between covariates is statistically significant. If it is, then the slope of the prediction line differs depending on the value of the covariates, otherwise the slope is constant. Statistical significance can be checked with hypothesis testing by creating a model with interaction and checking its statistics.
+When making this model type, we often consider whether interaction between covariates is statistically significant. If it is, then the slope of the prediction line differs depending on the value of the covariates, otherwise the slope is constant. Statistical significance can be checked with hypothesis testing by creating a model with interaction and checking its statistics. The null hypothesis for each slope is that it's 0. In these tables, `p.value` is the probability of observing a value as or more extreme than `statistic` if the null hypothesis is true, and [`conf.low`, `conf.high`] is the range where we're 95% confident the true value of the slope is.
 
 Results with interactions:
 
@@ -284,15 +284,15 @@ tidy(linear_add, conf.int = TRUE, conf.level = 0.95) %>%
   kable()
 ```
 
-In the first table, the interaction term (`bedroom:bathroom`) has a p-value of 0.11 in excess of our pre-decided level of significance of 0.05. Thus, we cannot confidently identify an interaction between the predictors and choose to proceed with the model without interaction, which has small p-values for all three coefficients.
+In the first table, the interaction term (`bedroom:bathroom`) has a p-value of 0.11 in excess of our pre-decided level of significance of 0.05. Thus, we cannot confidently identify an interaction between the predictors and proceed with the model without interaction, which has small p-values for all three coefficients.
 
 The `estimate` column in the second table shows a prediction line of the form:
 
 $$\text{price} = \$1172.76 + \$187.90 \cdot \text{bedroom} + \$592.21 \cdot \text{bathroom}$$
 
-The intercept value has no obvious interpretation because a place with no bedrooms or bathrooms isn't very realistic; however, the intercept is like a necessary starting point for the prediction so that the slopes stay unbiased.
+The intercept value has no obvious interpretation because a place without bedrooms or bathrooms isn't realistic; however, the intercept acts as a necessary predictive starting point so that the slopes stay unbiased.
 
-Both slopes are statistically significant at the 0.05 level and `bathroom` has a smaller p-value than `bedroom`, consistent with the EDA results that `bathroom` may be a slightly better predictor. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month.
+Both slopes are statistically significant at the 0.05 level and `bathroom` has a smaller p-value than `bedroom`, consistent with the EDA results that `bathroom` may be a better predictor. The slope values show that each additional bedroom in a property is associated with a \$187.90 increase in monthly rent when the number of bathrooms is fixed at any value, and that an additional bathroom is associated with a \$592.21 increase in rent when the number of bedrooms is fixed at any value. For example, the model predicts that a one-bed, one-bath condo costs \$1172.76 + \$187.90 + \$592.21 = $1952.87/month, just \$18.56 away from the sample's average one-bed, one-bath price of \$1971.43.
 
 \newpage
 
@@ -308,7 +308,7 @@ A residual plot plots the residuals/errors (the difference between the actual an
 plot(linear_add, which = 1)
 ```
 
-The error appear to have a mean of 0 because the points appear evenly around both sides of e = 0, but the variance is larger at certain areas (like when the fitted values are around 2000 and 3000), so the variance is not perfectly consistent. Applying transformations to the response variable, such as a log transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
+The errors appear to have a mean of 0 because the points appear evenly around both sides of e = 0, but the variance is larger at certain areas (like when the fitted values are around 2000 and 3000), so the variance is not perfectly consistent. Applying transformations to the response variable, such as a logarithmic transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
 
 \newpage
 
@@ -322,7 +322,7 @@ A Q-Q plot is another way to check the errors' distribution. If the error is nor
 plot(linear_add, which = 2)
 ```
 
-This Q-Q plot shows the data following this line for the most part, but the points diverge at the beginning and the end, implying that the model has more extreme data than can be expected under a true normal distribution (Ford, 2015). Applying transformations to the response variable, such as a log transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
+This Q-Q plot shows the data following this line for the most part, but the points diverge at the beginning and the end, implying that the model has more extreme data than can be expected under a true normal distribution (Ford, 2015). Applying transformations to the response variable, such as a logarithmic transformation and a square root transformation, were unsuccessful in creating a more favourable distribution.
 
 While our diagnostics reveal that our data may not be perfectly suited for a linear analysis, this is not uncommon for observed data. It is our belief that our model can still be useful for predicting.
 
@@ -390,7 +390,7 @@ $$\log\left(\frac{\hat{p}}{1-\hat{p}}\right) = -2.41 + 0.22 \cdot \text{bedroom}
 
 where $\hat{p}$ is the expected probability of a property having high rent and $\frac{\hat{p}}{1-\hat{p}}$ is its odds.
 
-This means that an additional bedroom increases the expected *log-odds* of a property having high rent by 0.05 and increases the expected *odds* of a property having high rent by a factor of $e^{0.22}$ = 1.24 or 24%. However, the p-value of 0.20 for this estimate implies that this conclusion is not statistically significant at a 0.05 significance level. Similarly, an additional bathroom increases the odds of a property having high rent by $e^{1.66}$ = 5.25 or 425%, which is statistically significant.
+This means that an additional bedroom increases the expected *log-odds* of a property having high rent by 0.05 and increases the expected *odds* of a property having high rent by a factor of $e^{0.22}$ = 1.24 or 24%. However, the p-value of 0.20 for this estimate implies that this conclusion is not statistically significant at a 0.05 significance level. To contrast, an additional bathroom increases the odds of a property having high rent by $e^{1.66}$ = 5.25 or 425%, which is statistically significant. The fact that `bathroom` has a larger coefficient than `bedroom` is again consistent with the EDA results that `bathroom` may be a better predictor.
 
 \newpage
 
@@ -406,7 +406,7 @@ logistic_add_disp <- glm(high_price ~ bedroom + bathroom, data = data, family = 
 summary(logistic_add_disp)
 ```
 
-As an additional assessment, we use a binned residuals plot, where most data points should fall within the generated error bounds for the model to be considered appropriate (Lüdecke et al., n.d.).
+As an additional assessment, we use a binned residuals plot, where most points should fall within the generated error bounds for the model to be considered appropriate (Lüdecke et al., n.d.).
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3}
 # Binned residuals plot
@@ -415,7 +415,7 @@ plot(binned_residuals(logistic_add)) +
   theme_classic()
 ```
 
-Each dot is the average residual for one bin of predicted probabilities and the vertical lines show the uncertainty around that average residual. The gray lines show the acceptable range for residuals. Since 1 of 6 bins fall outside the range, at the estimated probabilities exceeding 90%, the plot shows that the model fits decently well and that higher predicted probabilities should be more carefully interpreted.
+Each dot is the average residual for one bin of predicted probabilities and the vertical lines show the uncertainty around that average residual. The gray lines show the acceptable range for residuals. Since 1 of 6 bins fall outside the range, at the estimated probabilities around 80%, the plot shows that the model fits decently well and that higher predicted probabilities should be more carefully interpreted.
 
 ## Conclusion
 
